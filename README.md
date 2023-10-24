@@ -1,15 +1,15 @@
 # Rebel Explorer
-An blockchain explorer for Ravencoin and Ravencoin forks
+An blockchain explorer for Neurai
 ![image](https://user-images.githubusercontent.com/9694984/218311548-93d3dd3c-e606-478c-85fa-635f013ed278.png)
 
 ## Before you install
 - You need to have Node.js and Git installed.
 
 - You can run the Explorer and use an online Ravencoin RPC service such as
-   * https://rpc.ting.finance/ click on mainnet or testnet to find the endpoints.
+   * https://rpc-main.neurai.org click on mainnet or testnet to find the endpoints.
 
-- The idea is that you run your own Raven core node.
-The node needs to be fully indexed and your raven.conf must include
+- The idea is that you run your own Neurai node.
+The node needs to be fully indexed and your neurai.conf must include
     * txindex=1
     * addressindex=1
     * assetindex=1
@@ -34,9 +34,9 @@ Update the config.json file with your information and restart restart the node.j
 {
     "raven_password": "anonymous",
     "raven_username": "anonymous",
-    "raven_url": "https://rvn-rpc-testnet.ting.finance/rpc",
-    "httpPort": 80,
-    "headline": "Ravencoin Testnet",
+    "raven_url": "https://rpc-main.neurai.top/rpc",
+    "httpPort": 8888,
+    "headline": "Neurai mainnet",
     "theme": "dark",
     "ipfs_gateway": "https://cloudflare-ipfs.com/ipfs/"
 }

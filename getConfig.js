@@ -3,9 +3,9 @@ import fs from "fs";
 const defaultConfig = {
   raven_password: "anonymous",
   raven_username: "anonymous",
-  raven_url: "https://rvn-rpc-testnet.ting.finance/rpc",
-  httpPort: 80,
-  headline: "Ravencoin Testnet",
+  raven_url: "https://rpc-main.neurai.top/rpc",
+  httpPort: 8888,
+  headline: "Neurai Mainnet",
   theme: "dark",
   ipfs_gateway: "https://cloudflare-ipfs.com/ipfs/",
 };

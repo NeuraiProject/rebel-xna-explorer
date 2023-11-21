@@ -52,7 +52,7 @@ export function Assets() {
   if (!assets) {
     return <Loading />;
   }
-  const names = assets;
+  const names = assets as any[];
 
   const assetsToShow = names.filter((asset: string) => {
     if (!filterText) {

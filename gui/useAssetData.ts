@@ -6,7 +6,17 @@ const assetDataCache = {};
     When fetching asset data, lets save/cache the promise.
     We reuse the promise, that is we cache the response
 */
-async function getAssetDataCached(assetName: string) {
+
+export interface IAsset {
+  name: string;
+  amount: number;
+  units: number;
+  reissuable: number;
+  has_ipfs: number;
+  ipfs_hash: string;
+}
+
+async function getAssetDataCached(assetName: string): Promise<IAsset> {
   const name = encodeURIComponent(assetName);
   const URL = "/api/assetdata/" + name;
   let promise = assetDataCache[URL];
@@ -20,10 +30,11 @@ async function getAssetDataCached(assetName: string) {
 }
 
 export default function useAssetData(assetName: string) {
-  const [meta, setMeta] = React.useState(null);
+  const [meta, setMeta] = React.useState<IAsset | null>(null);
 
   React.useEffect(() => {
-    getAssetDataCached(assetName).then(setMeta);
+    const promise = getAssetDataCached(assetName);
+    promise.then((a) => setMeta(a));
   }, []);
   return meta;
 }

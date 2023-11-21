@@ -1,6 +1,7 @@
 import fs from "fs";
 
 const defaultConfig = {
+  baseCurrency: "RVN",
   raven_password: "anonymous",
   raven_username: "anonymous",
   raven_url: "https://rpc-main.neurai.top/rpc",

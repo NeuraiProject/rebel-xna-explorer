@@ -1,43 +1,23 @@
 import * as React from "react";
 import axios from "axios";
+
+//Parcel will handle the require call, no worries
+//@ts-ignore
 const numberConverter = require("number-to-words");
+
 import { getParam } from "./getParam";
 import { Spacer, Loading } from "@nextui-org/react";
 import { MyCard } from "./MyCard";
 import { Table } from "@nextui-org/react";
-function formatNumber(num) {
-  if (num === 0) {
-    return 0;
-  }
-  if (!num) {
-    return null;
-  }
-
-  if (typeof num !== "number") {
-    return null;
-  }
-
-  num = num / 1e8;
-  num = Number(num.toFixed(2));
-  const words = numberConverter.toWords(num);
-  const numberString = num.toLocaleString();
-  const capitalized = words.charAt(0).toUpperCase() + words.slice(1);
-  return (
-    <>
-      <div>{numberString}</div>
-      <div>
-        <i>{capitalized}</i>
-      </div>
-    </>
-  );
-}
+import { useRavencoinUSD } from "./useRavencoinUSD";
+import { useConfig } from "./useConfig";
 
 export function Address() {
-  const [address, setAddress] = React.useState("");
-  const [data, setData] = React.useState(null);
-
-  const [unspent, setUnspent] = React.useState(null);
-
+  const [address, setAddress] = React.useState<string | null>("");
+  const [data, setData] = React.useState<IBalance | null>(null);
+  const config = useConfig();
+  const [unspent, setUnspent] = React.useState<any[] | null>(null);
+  const rvnUsdRate = useRavencoinUSD();
   React.useEffect(() => {
     setAddress(getParam("address"));
   }, []);
@@ -77,25 +57,133 @@ export function Address() {
     <div className="form-group">
       <MyCard header="Address" body={address} />
       <Spacer />
-      <MyCard header="Balance" body={formatNumber(data.balance)}></MyCard>
+      <Balance
+        balance={data.balance}
+        baseCurrency={config ? config.baseCurrency : ""}
+        rvnUsdRate={rvnUsdRate}
+      />
       <Spacer></Spacer>
-      <MyCard header="Total received" body={formatNumber(data.received)} />
+      <Received
+        baseCurrency={config ? config.baseCurrency : ""}
+        received={data.received}
+        rvnUsdRate={rvnUsdRate}
+      ></Received>
       <Spacer></Spacer>
 
+      <MyCard
+        header="Inputs and outputs"
+        body={<a href={"/api/addressdeltas/" + address}>Link</a>}
+      ></MyCard>
+
+      <Spacer></Spacer>
       <MyCard header="Assets" body={<AssetTable assets={data.assets} />} />
-      <Spacer></Spacer>
-      <MyCard header={header} body={<Unspent address={address} unspent={unspent} />} />
 
-      {false && (
-        <MyCard
-          header="Received"
-          body={<Received address={address}></Received>}
-        />
-      )}
+      <Spacer></Spacer>
+      <MyCard
+        header={header}
+        body={<Unspent address={address} unspent={unspent} />}
+      />
     </div>
   );
 }
+interface IReceivedProps {
+  baseCurrency: string;
+  received: number;
+  rvnUsdRate: number | null;
+}
+interface IBalanceProps {
+  baseCurrency: string;
+  balance: number;
+  rvnUsdRate: number | null;
+}
 
+function formatNumber(num: number) {
+  if (num === 0) {
+    return 0;
+  }
+  if (!num) {
+    return null;
+  }
+
+  if (typeof num !== "number") {
+    return null;
+  }
+
+  num = Number(num.toFixed(2));
+  const words = numberConverter.toWords(num);
+  const numberString = num.toLocaleString();
+  const capitalized = words.charAt(0).toUpperCase() + words.slice(1);
+  return (
+    <>
+      <div>{numberString}</div>
+      <div>
+        <i>{capitalized}</i>
+      </div>
+    </>
+  );
+}
+
+interface IBalance {
+  balance: number;
+  received: number;
+  assets: any[];
+}
+function Balance({ balance, baseCurrency, rvnUsdRate }: IBalanceProps) {
+  const balanceAmount = balance / 1e8;
+  if (baseCurrency === "RVN" && rvnUsdRate) {
+    const rvn = (
+      <MyCard header="RVN" body={formatNumber(balanceAmount)}></MyCard>
+    );
+    const usd = (
+      <MyCard header="USD" body={formatNumber(balanceAmount * rvnUsdRate)}></MyCard>
+    );
+    const tutti = (
+      <div>
+        {rvn}
+        <Spacer />
+        {usd}
+      </div>
+    );
+
+    return <MyCard header="Balance" body={tutti} />;
+  }
+
+  return <MyCard header="Balance" body={formatNumber(balanceAmount)}></MyCard>;
+}
+
+function Received({ baseCurrency, received, rvnUsdRate }: IReceivedProps) {
+  const receivedAmount = Math.abs(received / 1e8);
+  if (baseCurrency !== "RVN" || rvnUsdRate === null) {
+    <MyCard
+      header="Total received"
+      body={
+        <div>
+          {baseCurrency} {formatNumber(receivedAmount)}
+        </div>
+      }
+    />;
+  }
+
+  let usdDisplay = <div></div>;
+  if (rvnUsdRate && baseCurrency === "RVN") {
+    usdDisplay = (
+      <MyCard header={"USD"} body={formatNumber(receivedAmount * rvnUsdRate)} />
+    );
+  }
+
+  return (
+    <MyCard
+      header="Total received"
+      body={
+        <div>
+          <MyCard header={baseCurrency} body={formatNumber(receivedAmount)} />
+          <Spacer />
+          {usdDisplay}
+        </div>
+      }
+    />
+  );
+}
 function Unspent({ address, unspent }) {
   if (!unspent) {
     return (
@@ -104,10 +192,15 @@ function Unspent({ address, unspent }) {
       </>
     );
   }
-  if(unspent.length > 100){
+  if (unspent.length > 100) {
     const URL = "/api/getaddressutxos/" + address;
-    return <div><a target="_blank" href={URL}>{unspent.length.toLocaleString()}  unspent</a></div>
-
+    return (
+      <div>
+        <a target="_blank" href={URL}>
+          {unspent.length.toLocaleString()} unspent
+        </a>
+      </div>
+    );
   }
   unspent = unspent.map((u) => {
     u.value = u.satoshis / 1e8;
@@ -133,55 +226,6 @@ function Unspent({ address, unspent }) {
   );
 
   return <MyCard header="Unspent transaction outputs (UTXO" body={body} />;
-}
-
-function Received({ address }) {
-  const [data, setData] = React.useState(null);
-
-  React.useEffect(() => {
-    const URL = "/api/receivedbyaddress/" + address;
-
-    const axiosResponse = axios.get(URL);
-    axiosResponse.then((d) => {
-      setData(d.data);
-    });
-  }, []);
-
-  if (!data) {
-    return <Loading />;
-  }
-
-  //Sort by date
-  let _data = data.sort(function (a, b) {
-    if (a.time < b.time) {
-      return 1;
-    }
-    if (a.time === b.time) {
-      return 0;
-    }
-    if (a.time > b.time) {
-      return -1;
-    }
-  });
-
-  return (
-    <div>
-      {_data.map(function (d) {
-        return (
-          <div>
-            <Spacer />
-            <div>{formatNumber(d.valueSat)}</div>
-
-            <div>
-              <a href={"index.html?route=TRANSACTION&id=" + d.txid}>
-                {new Date(d.time * 1000).toLocaleString()}
-              </a>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
 }
 
 function AssetTable({ assets }) {

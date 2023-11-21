@@ -191,6 +191,9 @@ export async function getAssets() {
 export async function getAddressDeltas(address) {
   return Reader.getAddressDeltas(address);
 }
+export async function getRawMempool() {
+  return Reader.getMempool();
+}
 
 export default {
   getAddressBalance,
@@ -205,6 +208,7 @@ export default {
   getBestBlockHash,
   getBlock,
   getCoinsInCirculation,
+  getRawMempool,
   getTransaction,
   getType,
 

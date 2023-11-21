@@ -10,7 +10,7 @@ import { Navigator } from "./Navigator";
 import { NextUIProvider, Text } from "@nextui-org/react";
 
 import { createTheme } from "@nextui-org/react";
-import { Transaction } from "./Transaction";
+import { Transaction } from "./transaction/Transaction";
 import { Assets } from "./Assets";
 import { Asset } from "./Asset";
 import axios from "axios";
@@ -37,7 +37,7 @@ function CurrentView({ route }) {
 }
 function App() {
   const [theme, setTheme] = React.useState(darkTheme);
-  const [route, setRoute] = React.useState(null);
+  const [route, setRoute] = React.useState<string | null>(null);
 
   const runOnce = [];
   React.useEffect(() => {

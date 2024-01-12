@@ -6,10 +6,10 @@ import { IReceivedProps, formatNumber } from "./Address";
 export function Received({
   baseCurrency,
   received,
-  rvnUsdRate,
+  xnaUsdRate,
 }: IReceivedProps) {
   const receivedAmount = Math.abs(received / 100000000);
-  if (baseCurrency !== "RVN" || rvnUsdRate === null) {
+  if (baseCurrency !== "XNA" || xnaUsdRate === null) {
     <MyCard
       header="Total received"
       body={
@@ -21,9 +21,9 @@ export function Received({
   }
 
   let usdDisplay = <div></div>;
-  if (rvnUsdRate && baseCurrency === "RVN") {
+  if (xnaUsdRate && baseCurrency === "XNA") {
     usdDisplay = (
-      <MyCard header={"USD"} body={formatNumber(receivedAmount * rvnUsdRate)} />
+      <MyCard header={"USD"} body={formatNumber(receivedAmount * xnaUsdRate)} />
     );
   }
 

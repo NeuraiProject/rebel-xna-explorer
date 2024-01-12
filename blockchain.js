@@ -27,10 +27,10 @@ const options = {
   },
 };
 export function getAddressUTXOs(address) {
-  //Fetch UTXOs for RVN and for Assets
+  //Fetch UTXOs for XNA and for Assets
 
   const myPromise = new Promise((resolve, reject) => {
-    //GET RVN
+    //GET XNA
     const p1 = rpc("getaddressutxos", [address]);
     //GET ASSETS
     const p2 = rpc("getaddressutxos", [

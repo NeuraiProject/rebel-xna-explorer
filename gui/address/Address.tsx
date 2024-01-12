@@ -8,7 +8,7 @@ const numberConverter = require("number-to-words");
 import { getParam } from "../getParam";
 import { Spacer } from "@nextui-org/react";
 import { MyCard } from "../MyCard";
-import { useRavencoinUSD } from "../useRavencoinUSD";
+import { useNeuraiUSD } from "../useNeuraiUSD";
 import { useConfig } from "../useConfig";
 import { useFetch } from "../useFetch";
 import { Balance } from "./Balance";
@@ -23,7 +23,7 @@ export function Address() {
   const config = useConfig();
   const unspent = useFetch("/api/getaddressutxos/" + address);
   const data = useFetch("/api/addresses/" + address);
-  const rvnUsdRate = useRavencoinUSD();
+  const xnaUsdRate = useNeuraiUSD();
 
   if (!data) {
     console.log("data data is nothing");
@@ -43,13 +43,13 @@ export function Address() {
       <Balance
         balance={data.balance}
         baseCurrency={config ? config.baseCurrency : ""}
-        rvnUsdRate={rvnUsdRate}
+        xnaUsdRate={xnaUsdRate}
       />
       <Spacer></Spacer>
       <Received
         baseCurrency={config ? config.baseCurrency : ""}
         received={data.received}
-        rvnUsdRate={rvnUsdRate}
+        xnaUsdRate={xnaUsdRate}
       ></Received>
 
       <Spacer></Spacer>
@@ -70,12 +70,12 @@ export function Address() {
 export interface IReceivedProps {
   baseCurrency: string;
   received: number;
-  rvnUsdRate: number | null;
+  xnaUsdRate: number | null;
 }
 export interface IBalanceProps {
   baseCurrency: string;
   balance: number;
-  rvnUsdRate: number | null;
+  xnaUsdRate: number | null;
 }
 
 export function formatNumber(num: number) {

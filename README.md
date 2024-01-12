@@ -34,7 +34,7 @@ Update the config.json file with your information and restart restart the node.j
 {
     "raven_password": "anonymous",
     "raven_username": "anonymous",
-    "raven_url": "https://rpc-main.neurai.top/rpc",
+    "raven_url": "https://rpc-main.neurai.org/rpc",
     "httpPort": 8888,
     "headline": "Neurai mainnet",
     "theme": "dark",

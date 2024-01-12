@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Table } from "@nextui-org/react";
-import { useRavencoinUSD } from "../useRavencoinUSD";
+import { useNeuraiUSD } from "../useNeuraiUSD";
 import { ITransaction } from "./ITransaction";
 import { getFee } from "./getFee";
 
@@ -10,15 +10,15 @@ export function Fee({
   baseCurrency: string;
   transaction: ITransaction;
 }) {
-  const rvnUsdRate = useRavencoinUSD();
+  const xnaUsdRate = useNeuraiUSD();
   const fee = getFee(transaction);
 
   let usdDisplayValue = "";
-  if (typeof fee === "number" && rvnUsdRate) {
-    usdDisplayValue = "" + fee * rvnUsdRate;
+  if (typeof fee === "number" && xnaUsdRate) {
+    usdDisplayValue = "" + fee * xnaUsdRate;
   }
 
-  if (baseCurrency !== "RVN") {
+  if (baseCurrency !== "XNA") {
     return (
       <Table style={{ tableLayout: "fixed" }}>
         <Table.Header>
@@ -31,7 +31,7 @@ export function Fee({
         </Table.Body>
       </Table>
     );
-  } else if (baseCurrency === "RVN") {
+  } else if (baseCurrency === "XNA") {
     return (
       <Table style={{ tableLayout: "fixed" }}>
         <Table.Header>

@@ -16,6 +16,7 @@
   "type": "module",
   "dependencies": {
     "@nextui-org/react": "1.0.0-beta.12",
+    "@ravenrebels/ravencoin-history-list": "^1.2.4",
     "@ravenrebels/ravencoin-reader": "^0.0.7",
     "@ravenrebels/ravencoin-rpc": "^0.3.3",
     "@types/lodash": "^4.14.188",

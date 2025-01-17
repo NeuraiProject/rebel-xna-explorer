@@ -49,6 +49,7 @@ export function TransactionDetails({ config, transaction }) {
           <Table style={{ tableLayout: "fixed" }}>
             <Table.Header>
               <Table.Column>Block</Table.Column>
+              <Table.Column>Confirmations</Table.Column>
             </Table.Header>
             <Table.Body>
               <Table.Row>
@@ -56,6 +57,9 @@ export function TransactionDetails({ config, transaction }) {
                   <a href={"?route=BLOCK&hash=" + transaction.blockhash}>
                     {transaction.height.toLocaleString()}
                   </a>
+                </Table.Cell>
+                <Table.Cell>
+                  {transaction.confirmations.toLocaleString()}
                 </Table.Cell>
               </Table.Row>
             </Table.Body>

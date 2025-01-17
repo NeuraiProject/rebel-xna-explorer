@@ -5,7 +5,7 @@ An blockchain explorer for Neurai
 ## Before you install
 - You need to have Node.js and Git installed.
 
-- You can run the Explorer and use an online Ravencoin RPC service such as
+- You can run the Explorer and use an online Neurai RPC service such as
    * https://rpc-main.neurai.org click on mainnet or testnet to find the endpoints.
 
 - The idea is that you run your own Neurai node.

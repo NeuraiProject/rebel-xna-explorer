@@ -1,5 +1,5 @@
-import { getRPC, methods } from "@ravenrebels/ravencoin-rpc";
-import Reader from "@ravenrebels/ravencoin-reader";
+import { getRPC, methods } from "@neuraiproject/neurai-rpc";
+import Reader from "@neuraiproject/neurai-reader";
 
 import axios from "axios";
 /*
@@ -77,7 +77,7 @@ export async function listAssets() {
   return rpc("listassets", [asset, verbose]);
 }
 export async function getAddressBalance(address) {
-  const balance = await Reader.getRavencoinBalance(address);
+  const balance = await Reader.getNeuraiBalance(address);
   balance.assets = await Reader.getAssetBalance(address);
   return balance;
 }

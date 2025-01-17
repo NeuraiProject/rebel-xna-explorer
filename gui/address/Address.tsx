@@ -1,6 +1,6 @@
 import * as React from "react";
 import axios from "axios";
-import { getHistory } from "@ravenrebels/ravencoin-history-list";
+
 //Parcel will handle the require call, no worries
 //@ts-ignore
 const numberConverter = require("number-to-words");

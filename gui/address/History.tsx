@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Loading, Table } from "@nextui-org/react";
 import { useFetch } from "../useFetch";
-
+import { getHistory } from "@neuraiproject/neurai-history-list";
 export function History({ address }: { address: string | null }) {
   const URL = "/api/addressdeltas/" + address;
 
@@ -13,11 +13,13 @@ export function History({ address }: { address: string | null }) {
       </div>
     );
   }
-  //Sort by height
-  _deltas.sort((d1: IHeight, d2: IHeight) => (d1.height > d2.height ? -1 : 1));
 
-  //Only show the last 100 items
-  const deltas = _deltas.length > 100 ? _deltas.slice(0, 100) : _deltas;
+  const history = getHistory(_deltas);
+
+  //Sort by height
+  history.sort((d1: IHeight, d2: IHeight) =>
+    d1.blockHeight > d2.blockHeight ? -1 : 1
+  );
 
   //If addy has more than 100 items, show a link to full list
   let fullLink: string | React.ReactElement = "";
@@ -31,23 +33,33 @@ export function History({ address }: { address: string | null }) {
   }
 
   interface IHeight {
-    height: number;
+    blockHeight: number;
   }
 
-  const rows = deltas.map((delta) => {
-    const URL = "?route=TRANSACTION&id=" + delta.txid;
-    return (
-      <Table.Row key={delta.txid + "_" + delta.index}>
-        <Table.Cell>
-          <a href={URL}>{delta.assetName}</a>
-        </Table.Cell>
-        <Table.Cell>{delta.amount.toLocaleString()}</Table.Cell>
-        <Table.Cell>{delta.height.toLocaleString()}</Table.Cell>
-        <Table.Cell>
-          <Time height={delta.height}></Time>
-        </Table.Cell>
-      </Table.Row>
-    );
+  const rows: any[] = [];
+  const MAX_ROWS = 100;
+
+  history.map((historyItem, index) => {
+    if (index > MAX_ROWS) {
+      return;
+    }
+    const URL = "?route=TRANSACTION&id=" + historyItem.transactionId;
+
+    for (let asset of historyItem.assets) {
+      const obj = (
+        <Table.Row key={historyItem.transactionId}>
+          <Table.Cell>
+            <a href={URL}>{asset.assetName}</a>
+          </Table.Cell>
+          <Table.Cell>{asset.value.toLocaleString()}</Table.Cell>
+          <Table.Cell>{historyItem.blockHeight.toLocaleString()}</Table.Cell>
+          <Table.Cell>
+            <Time height={historyItem.blockHeight}></Time>
+          </Table.Cell>
+        </Table.Row>
+      );
+      rows.push(obj);
+    }
   });
 
   return (

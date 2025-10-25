@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Modal, Text } from "@nextui-org/react";
+import { Modal, Text } from "./components";
 import useAssetData from "./useAssetData";
 
 export function Meta({ asset }) {
@@ -30,27 +30,23 @@ export function Meta({ asset }) {
 export function AssetModal({ modalVisible, closeModal, assetName }) {
   if (modalVisible === false) {
     //Returned a closed modal
-    return <Modal open={modalVisible} />;
+    return <Modal visible={modalVisible} onClose={closeModal} />;
   }
   const asset = useAssetData(assetName);
   if (!asset) {
     //Returned a closed modal
-    return <Modal open={modalVisible} />;
+    return <Modal visible={modalVisible} onClose={closeModal} />;
   }
   return (
     <Modal
-      closeButton
-      aria-labelledby="modal-title"
-      open={modalVisible}
+      visible={modalVisible}
       onClose={closeModal}
     >
       <Modal.Header>
-        <Text id="modal-title" size={18}>
-          Asset data for{" "}
-          <Text b size={18}>
-            {asset.name}
-          </Text>
-        </Text>
+        <Modal.Title>
+          Asset data for <Text b size={18}>{asset.name}</Text>
+        </Modal.Title>
+        <button className="modal-close" onClick={closeModal}>×</button>
       </Modal.Header>
       <Modal.Body>
         <Meta asset={asset} />

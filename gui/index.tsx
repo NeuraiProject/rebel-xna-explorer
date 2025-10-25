@@ -7,20 +7,11 @@ import Routes from "./Routes";
 import { getParam } from "./getParam";
 import { Block } from "./Block";
 import { Navigator } from "./Navigator";
-import { NextUIProvider, Spacer, Text } from "@nextui-org/react";
+import { Spacer, Text } from "./components";
 
-import { createTheme } from "@nextui-org/react";
 import { Transaction } from "./transaction/Transaction";
 import { Assets } from "./Assets";
 import { Asset } from "./Asset";
-import axios from "axios";
-
-const darkTheme = createTheme({
-  type: "dark",
-});
-const lightTheme = createTheme({
-  type: "light",
-});
 
 const views = {
   [Routes.HOME]: <Blocks />,
@@ -36,7 +27,6 @@ function CurrentView({ route }) {
   return views[route];
 }
 function App() {
-  const [theme, setTheme] = React.useState(darkTheme);
   const [route, setRoute] = React.useState<string | null>(null);
 
   const runOnce = [];
@@ -47,17 +37,6 @@ function App() {
     } else {
       setRoute(route);
     }
-
-    //Set theme
-    axios.get("/gui-settings").then((response) => {
-      const themes = {
-        dark: darkTheme,
-        light: lightTheme,
-      };
-
-      const theme = themes[response.data.theme];
-      setTheme(theme);
-    });
   }, runOnce);
 
   if (route === null) {
@@ -65,12 +44,12 @@ function App() {
   }
 
   return (
-    <NextUIProvider theme={theme}>
+    <div>
       <Navigator />
       {<CurrentView route={route}></CurrentView>}
       <Spacer></Spacer>
       <Footer></Footer>
-    </NextUIProvider>
+    </div>
   );
 }
 
@@ -78,8 +57,8 @@ function Footer() {
   return (
     <div>
       <Text size={12}>
-        Rebel Explorer = Software from{" "}
-        <a href="https://twitter.com/RavenRebels">Raven Rebels</a>
+        Nurai Rebel Explorer = Software from{" "}
+        <a href="https://twitter.com/neuraiproject">Neuraiproject</a>
       </Text>
     </div>
   );

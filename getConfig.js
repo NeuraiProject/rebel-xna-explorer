@@ -8,7 +8,7 @@ const defaultConfig = {
   httpPort: 8888,
   headline: "Neurai Mainnet",
   theme: "dark",
-  ipfs_gateway: "https://cloudflare-ipfs.com/ipfs/",
+  ipfs_gateway: "https://gateway.pinata.cloud/ipfs/",
 };
 const PROMPT_USER_TO_UPDATE_MESSAGE =
   "Please update your ./config.json file with your info";

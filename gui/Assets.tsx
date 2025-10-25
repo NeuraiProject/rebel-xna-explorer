@@ -1,10 +1,8 @@
-import { Loading, Table } from "@nextui-org/react";
+import { Loading, Table, Input, Pagination, Spacer } from "./components";
 import axios from "axios";
 import { debounce } from "lodash";
 import * as React from "react";
 import { MyCard } from "./MyCard";
-
-import { Input, Pagination, Spacer } from "@nextui-org/react";
 import { AssetImageLink } from "./AssetImageLink";
 import { AssetModal } from "./AssetModal";
 import useAssetData from "./useAssetData";
@@ -12,7 +10,7 @@ import useAssetData from "./useAssetData";
 export function Assets() {
   const [assets, setAssets] = React.useState([]);
   const [gatewayURL, setGatewayURL] = React.useState(
-    "https://cloudflare-ipfs.com/ipfs/"
+    "https://gateway.pinata.cloud/ipfs/"
   );
   const [filterText, setFilterText] = React.useState("");
   const [modalVisible, setModalVisible] = React.useState(false);

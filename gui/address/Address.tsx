@@ -1,12 +1,8 @@
 import * as React from "react";
 import axios from "axios";
 
-//Parcel will handle the require call, no worries
-//@ts-ignore
-const numberConverter = require("number-to-words");
-
 import { getParam } from "../getParam";
-import { Spacer } from "@nextui-org/react";
+import { Spacer } from "../components";
 import { MyCard } from "../MyCard";
 import { useNeuraiUSD } from "../useNeuraiUSD";
 import { useConfig } from "../useConfig";
@@ -91,17 +87,8 @@ export function formatNumber(num: number) {
   }
 
   num = Number(num.toFixed(2));
-  const words = numberConverter.toWords(num);
   const numberString = num.toLocaleString();
-  const capitalized = words.charAt(0).toUpperCase() + words.slice(1);
-  return (
-    <>
-      <div>{numberString}</div>
-      <div>
-        <i>{capitalized}</i>
-      </div>
-    </>
-  );
+  return <div>{numberString}</div>;
 }
 
 interface IBalance {

@@ -1,4 +1,4 @@
-import { Avatar, Link } from "@nextui-org/react";
+import { Avatar, Link } from "./components";
 import * as React from "react";
 import useAssetData from "./useAssetData";
 

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { ITransaction } from "./ITransaction";
-import { Table } from "@nextui-org/react";
+import { Table } from "../components";
 
 export function Outputs({ transaction }: { transaction: ITransaction }) {
   if (!transaction) {

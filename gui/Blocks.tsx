@@ -1,6 +1,6 @@
 import * as React from "react";
 import axios from "axios";
-import { Card, Spacer, Table, Text } from "@nextui-org/react";
+import { Spacer, Table } from "./components";
 import { MyCard } from "./MyCard";
 
 interface IBlock {

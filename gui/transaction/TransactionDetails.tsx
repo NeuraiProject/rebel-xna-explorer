@@ -1,6 +1,6 @@
 import * as React from "react";
 import { MyCard } from "../MyCard";
-import { Table } from "@nextui-org/react";
+import { Table } from "../components";
 import { Fee } from "./Fee";
 
 export function TransactionDetails({ config, transaction }) {

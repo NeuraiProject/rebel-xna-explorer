@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Table } from "@nextui-org/react";
+import { Table } from "../components";
 import { ITransaction } from "./ITransaction";
 import { useTransaction } from "./useTransaction";
 

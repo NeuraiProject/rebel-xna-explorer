@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Spacer } from "@nextui-org/react";
+import { Spacer } from "../components";
 import { MyCard } from "../MyCard";
 import { IReceivedProps, formatNumber } from "./Address";
 
@@ -9,15 +9,18 @@ export function Received({
   xnaUsdRate,
 }: IReceivedProps) {
   const receivedAmount = Math.abs(received / 100000000);
+  
   if (baseCurrency !== "XNA" || xnaUsdRate === null) {
-    <MyCard
-      header="Total received"
-      body={
-        <div>
-          {baseCurrency} {formatNumber(receivedAmount)}
-        </div>
-      }
-    />;
+    return (
+      <MyCard
+        header="Total received"
+        body={
+          <div>
+            {baseCurrency} {formatNumber(receivedAmount)}
+          </div>
+        }
+      />
+    );
   }
 
   let usdDisplay = <div></div>;

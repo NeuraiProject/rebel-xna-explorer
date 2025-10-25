@@ -38,7 +38,7 @@ Update the config.json file with your information and restart restart the node.j
     "httpPort": 8888,
     "headline": "Neurai mainnet",
     "theme": "dark",
-    "ipfs_gateway": "https://cloudflare-ipfs.com/ipfs/"
+    "ipfs_gateway": "https://gateway.pinata.cloud/ipfs/"
 }
 ```
 

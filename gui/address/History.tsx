@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Loading, Table } from "@nextui-org/react";
+import { Loading, Table } from "../components";
 import { useFetch } from "../useFetch";
 import { getHistory } from "@neuraiproject/neurai-history-list";
 export function History({ address }: { address: string | null }) {
@@ -73,13 +73,6 @@ export function History({ address }: { address: string | null }) {
           <Table.Column>Date</Table.Column>
         </Table.Header>
         <Table.Body>{rows}</Table.Body>
-        <Table.Pagination
-          shadow
-          noMargin
-          align="center"
-          rowsPerPage={10}
-          onPageChange={(page) => console.log({ page })}
-        />
       </Table>
     </div>
   );

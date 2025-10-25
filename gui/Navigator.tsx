@@ -1,6 +1,6 @@
 import * as React from "react";
 import axios from "axios";
-import { Button, Text, Navbar, Input, Spacer, Link } from "@nextui-org/react";
+import { Button, Text, Navbar, Input, Spacer, Link } from "./components";
 
 export function Navigator() {
   const [query, setQuery] = React.useState("");
@@ -78,26 +78,21 @@ export function Navigator() {
           </Link>
         </Navbar.Brand>
 
+        <div className="navbar-right">
+          <Link href="index.html?route=ASSETS">Assets / Tokens</Link>
+        </div>
+
         <Navbar.Collapse>
           <Navbar.CollapseItem>
-            <form className="d-flex" role="search" onSubmit={search}>
+            <form className="d-flex" role="search" onSubmit={search} style={{ width: "100%" }}>
               <Input
                 size="xl"
-                width="300"
                 onChange={(event) => {
                   setQuery(event.target.value);
                 }}
                 placeholder="Address / transaction / block id"
               />
-              <Spacer y={1}></Spacer>
-              {loading == false && <Button auto flat as={Link} onClick={search}>
-                Search
-              </Button>}
             </form>
-          </Navbar.CollapseItem>
-
-          <Navbar.CollapseItem>
-            <Link href="index.html?route=ASSETS">Assets / Tokens</Link>
           </Navbar.CollapseItem>
         </Navbar.Collapse>
       </Navbar>

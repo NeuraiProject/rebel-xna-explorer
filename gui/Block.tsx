@@ -2,7 +2,7 @@ import * as React from "react";
 import { getParam } from "./getParam";
 import axios from "axios";
 
-import { Badge, Card, Text, Spacer } from "@nextui-org/react";
+import { Badge, Spacer } from "./components";
 import { MyCard } from "./MyCard";
 
 export function Block() {

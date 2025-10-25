@@ -2,7 +2,7 @@ import * as React from "react";
 import { getParam } from "../getParam";
 
 import { MyCard } from "../MyCard";
-import { Spacer } from "@nextui-org/react";
+import { Spacer } from "../components";
 import { useConfig } from "../useConfig";
 import { Inputs } from "./Inputs";
 import { useTransaction } from "./useTransaction";

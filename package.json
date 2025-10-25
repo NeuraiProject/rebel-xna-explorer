@@ -1,6 +1,6 @@
 {
   "name": "rebel-explorer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "",
   "scripts": {
@@ -11,14 +11,14 @@
     "start": "npm run server"
   },
   "keywords": [],
-  "author": "Raven Rebels - Dick Henrik Larsson",
+  "author": "Neuraiproject",
   "license": "MIT",
   "type": "module",
   "dependencies": {
     "@nextui-org/react": "1.0.0-beta.12",
-    "@neuraiproject/neurai-history-list": "^1.2.4",
+    "@neuraiproject/neurai-history-list": "^1.2.5",
     "@neuraiproject/neurai-reader": "^0.0.7",
-    "@neuraiproject/neurai-rpc": "^0.3.3",
+    "@neuraiproject/neurai-rpc": "^0.4.2",
     "@types/lodash": "^4.14.188",
     "@types/react": "^18.2.34",
     "axios": "^1.6.5",

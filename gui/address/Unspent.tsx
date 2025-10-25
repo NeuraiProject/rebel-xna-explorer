@@ -1,6 +1,6 @@
 import * as React from "react";
 const numberConverter = require("number-to-words");
-import { Loading } from "@nextui-org/react";
+import { Loading } from "../components";
 import { MyCard } from "../MyCard";
 
 export function Unspent({ address, unspent }) {

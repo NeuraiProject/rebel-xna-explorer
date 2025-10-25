@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Spacer } from "@nextui-org/react";
+import { Spacer } from "../components";
 import { MyCard } from "../MyCard";
 import { IBalanceProps, formatNumber } from "./Address";
 

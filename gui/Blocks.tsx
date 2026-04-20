@@ -8,6 +8,25 @@ interface IBlock {
   time: number;
   hash: string;
   tx: any;
+  size: number;
+}
+
+function formatSize(bytes: number): string {
+  if (!bytes && bytes !== 0) return "-";
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+}
+
+function pad(n: number): string {
+  return n < 10 ? "0" + n : "" + n;
+}
+
+function formatDateTime(unix: number): string {
+  const d = new Date(unix * 1000);
+  const date = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+  const time = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  return `${date} ${time}`;
 }
 export function Blocks() {
   const [blocks, setBlocks] = React.useState<IBlock[]>([]);
@@ -48,21 +67,32 @@ export function Blocks() {
     >
       <Table.Header>
         <Table.Column>Height</Table.Column>
-        <Table.Column>Time</Table.Column>
-        <Table.Column>Transactions</Table.Column>
+        <Table.Column align="center">TX</Table.Column>
+        <Table.Column align="center">Size</Table.Column>
+        <Table.Column align="center" style={{ width: "1%", whiteSpace: "nowrap" }}>Time</Table.Column>
       </Table.Header>
       <Table.Body>
         {blocks.map((block) => {
           const URL = "index.html?route=BLOCK&hash=" + block.hash;
 
-          const time = new Date(block.time * 1000).toLocaleString();
+          const time = formatDateTime(block.time);
           return (
             <Table.Row key={block.hash}>
               <Table.Cell>
                 <a href={URL}>{block.height.toLocaleString()}</a>
               </Table.Cell>
-              <Table.Cell>{time}</Table.Cell>
-              <Table.Cell>{block.tx.length}</Table.Cell>
+              <Table.Cell align="center">{block.tx.length}</Table.Cell>
+              <Table.Cell align="center">{formatSize(block.size)}</Table.Cell>
+              <Table.Cell
+                style={{
+                  textAlign: "right",
+                  whiteSpace: "nowrap",
+                  fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {time}
+              </Table.Cell>
             </Table.Row>
           );
         })}

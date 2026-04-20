@@ -188,6 +188,9 @@ async function getBlocksByHashes(hashes) {
 export async function getAssets() {
   return Reader.getAllAssets();
 }
+export async function getAddressesByAsset(name) {
+  return rpc("listaddressesbyasset", [name]);
+}
 export async function getAddressDeltas(address) {
   return Reader.getAddressDeltas(address);
 }
@@ -198,6 +201,7 @@ export async function getRawMempool() {
 export default {
   getAddressBalance,
   getAddressDeltas,
+  getAddressesByAsset,
   getAddressUTXOs,
   getAssetData,
   getAssets,

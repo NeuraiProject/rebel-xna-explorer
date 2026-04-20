@@ -6,7 +6,7 @@ import { Blocks } from "./Blocks";
 import Routes from "./Routes";
 import { getParam } from "./getParam";
 import { Block } from "./Block";
-import { Navigator } from "./Navigator";
+import { Navigator, SearchBar } from "./Navigator";
 import { Spacer, Text } from "./components";
 
 import { Transaction } from "./transaction/Transaction";
@@ -44,10 +44,13 @@ function App() {
   }
 
   return (
-    <div>
+    <div className="app-shell">
       <Navigator />
-      {<CurrentView route={route}></CurrentView>}
-      <Spacer></Spacer>
+      <div className="content-container">
+        <SearchBar />
+        <Spacer />
+        <CurrentView route={route}></CurrentView>
+      </div>
       <Footer></Footer>
     </div>
   );
@@ -55,12 +58,14 @@ function App() {
 
 function Footer() {
   return (
-    <div>
-      <Text size={12}>
-        Nurai Rebel Explorer = Software from{" "}
-        <a href="https://twitter.com/neuraiproject">Neuraiproject</a>
-      </Text>
-    </div>
+    <footer className="site-footer">
+      <p>
+        © 2026 Neurai ·{" "}
+        <a href="https://neurai.org" target="_blank" rel="noopener">
+          neurai.org
+        </a>
+      </p>
+    </footer>
   );
 }
 //Render the app

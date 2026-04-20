@@ -10,6 +10,7 @@ export interface IConfig {
   headline: string
   theme: string
   ipfs_gateway: string
+  price_lookup_enabled?: boolean
 }
 
 export function useConfig():IConfig | null {

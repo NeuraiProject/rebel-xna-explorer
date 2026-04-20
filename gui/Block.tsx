@@ -12,10 +12,6 @@ export function Block() {
     const URL = "/api/blocks/" + hash;
     async function work() {
       const asdf = await axios.get(URL);
-      delete asdf.data.type;
-      delete asdf.data._rev;
-      delete asdf.data._id;
-      delete asdf.data.hex;
       setData(asdf.data);
     }
     work();

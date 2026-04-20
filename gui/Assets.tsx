@@ -115,6 +115,7 @@ export function Assets() {
           <Table.Column>Name</Table.Column>
           <Table.Column>IPFS</Table.Column>
           <Table.Column>Amount</Table.Column>
+          <Table.Column>Addresses</Table.Column>
         </Table.Header>
         <Table.Body>
           {displayedAssets.map((assetName: string) => {
@@ -124,12 +125,7 @@ export function Assets() {
                 <Table.Cell>
                   <a
                     title={assetName}
-                    href={"#"}
-                    onClick={() => {
-                      setSelectedAssetName(assetName);
-
-                      showModal();
-                    }}
+                    href={"index.html?route=ASSET&name=" + encodeURIComponent(assetName)}
                   >
                     {assetName}
                   </a>
@@ -143,6 +139,9 @@ export function Assets() {
 
                 <Table.Cell>
                   <AssetAmount assetName={assetName} />
+                </Table.Cell>
+                <Table.Cell>
+                  <AssetAddressCount assetName={assetName} />
                 </Table.Cell>
               </Table.Row>
             );
@@ -161,6 +160,32 @@ function AssetAmount({ assetName }) {
   }
 
   return <div>{asset.amount.toLocaleString()}</div>;
+}
+
+const assetAddressCountCache: { [name: string]: Promise<number> } = {};
+function getAssetAddressCount(assetName: string): Promise<number> {
+  if (!assetAddressCountCache[assetName]) {
+    assetAddressCountCache[assetName] = axios
+      .get("/api/assetaddresses/" + encodeURIComponent(assetName))
+      .then((r) => (r.data?.holders?.length ?? 0));
+  }
+  return assetAddressCountCache[assetName];
+}
+
+function AssetAddressCount({ assetName }: { assetName: string }) {
+  const [count, setCount] = React.useState<number | null>(null);
+  React.useEffect(() => {
+    let cancelled = false;
+    getAssetAddressCount(assetName).then((n) => {
+      if (!cancelled) setCount(n);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [assetName]);
+
+  if (count === null) return <span>…</span>;
+  return <div>{count.toLocaleString()}</div>;
 }
 function MyPaginator({ setPage, total, page, pageSize }) {
   const numberOfPages = Math.ceil(total / pageSize);

@@ -1,5 +1,4 @@
 import * as React from "react";
-import * as numberConverter from "number-to-words";
 import { Loading } from "../components";
 import { MyCard } from "../MyCard";
 
@@ -21,22 +20,12 @@ export function Unspent({ address, unspent }) {
       </div>
     );
   }
-  unspent = unspent.map((u) => {
-    u.value = u.satoshis / 100000000;
-    u.text = numberConverter.toWords(u.value);
-    return u;
-  });
-  if (unspent.length > 100) {
-    const text = JSON.stringify(unspent, null, 4);
-    return <pre>{text}</pre>;
-  }
-
   const body = (
     <ol>
       {unspent.map((u) => {
         const k = u.txid + " " + u.outputIndex;
         return (
-          <li key={k}>
+          <li key={k} style={{ marginBottom: 4 }}>
             <pre>{JSON.stringify(u, null, 4)}</pre>
           </li>
         );

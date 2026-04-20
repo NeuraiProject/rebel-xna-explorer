@@ -68,8 +68,9 @@ Table.Header = function TableHeader({ children }: TableHeaderProps) {
   );
 };
 
-Table.Column = function TableColumn({ children }: TableColumnProps) {
-  return <th>{children}</th>;
+Table.Column = function TableColumn({ children, align, style }: any) {
+  const finalStyle = align ? { textAlign: align, ...(style || {}) } : style;
+  return <th style={finalStyle}>{children}</th>;
 };
 
 Table.Body = function TableBody({ children, onRowClick }: any) {
@@ -99,6 +100,7 @@ Table.Row = function TableRow({ children, onRowClick, ...props }: any) {
   );
 };
 
-Table.Cell = function TableCell({ children }: TableCellProps) {
-  return <td>{children}</td>;
+Table.Cell = function TableCell({ children, style, align }: any) {
+  const finalStyle = align ? { textAlign: align, ...(style || {}) } : style;
+  return <td style={finalStyle}>{children}</td>;
 };

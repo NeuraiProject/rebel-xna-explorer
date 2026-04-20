@@ -40,17 +40,8 @@ export function Address() {
         balance={data.balance}
         baseCurrency={config ? config.baseCurrency : ""}
         xnaUsdRate={xnaUsdRate}
+        assets={data.assets}
       />
-      <Spacer></Spacer>
-      <Received
-        baseCurrency={config ? config.baseCurrency : ""}
-        received={data.received}
-        xnaUsdRate={xnaUsdRate}
-      ></Received>
-
-      <Spacer></Spacer>
-      <MyCard header="Assets" body={<AssetTable assets={data.assets} />} />
-
       <Spacer></Spacer>
 
       <MyCard header="History" body={<History address={address} />} />

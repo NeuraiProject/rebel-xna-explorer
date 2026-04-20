@@ -58,6 +58,7 @@ app.get("/gui-settings", (_, response) => {
     headline: CONFIG.headline,
     theme: CONFIG.theme,
     ipfs_gateway: CONFIG.ipfs_gateway,
+    price_lookup_enabled: CONFIG.price_lookup_enabled !== false,
   });
 });
 app.get("/api/addresses", function (_, response) {
@@ -173,6 +174,35 @@ app.get("/api/blocks", async (req, res) => {
   }
 });
 
+app.get("/api/assetaddresses/:name", async (req, res) => {
+  const name = "" + req.params.name;
+  try {
+    const holdersObj = await blockchain.getAddressesByAsset(name);
+    const holders = Object.entries(holdersObj || {}).map(([address, amount]) => ({
+      address,
+      amount,
+    }));
+    holders.sort((a, b) => b.amount - a.amount);
+
+    let ownerAddress = null;
+    let ownerAmount = null;
+    if (!name.endsWith("!")) {
+      try {
+        const ownerObj = await blockchain.getAddressesByAsset(name + "!");
+        const entries = Object.entries(ownerObj || {});
+        if (entries.length) {
+          ownerAddress = entries[0][0];
+          ownerAmount = entries[0][1];
+        }
+      } catch (_) {}
+    }
+    res.send({ ownerAddress, ownerAmount, holders });
+  } catch (e) {
+    console.dir(e);
+    res.status(500).send({ error: "" + e });
+  }
+});
+
 app.get("/api/assetdata/:name", (request, response) => {
   const name = "" + request.params.name;
 
@@ -195,7 +225,6 @@ app.get("/api/transactions/:id", async (request, response) => {
   blockchain
     .getTransaction(id)
     .then((data) => {
-      delete data.hex;
       response.send(data);
       return;
     })

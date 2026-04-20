@@ -1,0 +1,153 @@
+services:
+  neuraid:
+    build:
+      context: ./node
+      dockerfile: Dockerfile
+      args:
+        BRANCH: DePIN-Test
+    image: neuraiproject/node-testnet_rpc-proxy_explorer-rpc:1.0.0-node
+    container_name: neurai-testnet-node
+    restart: unless-stopped
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+    environment:
+      # ── Network ──────────────────────────────────────────────────────────
+      NEURAI_TESTNET: "1"
+      # NEURAI_LISTEN: 1 to accept inbound P2P connections
+      NEURAI_LISTEN: "0"
+      NEURAI_REST: "1"
+
+      # ── RPC ──────────────────────────────────────────────────────────────
+      NEURAI_RPC_USER: "neurai"
+      NEURAI_RPC_PASSWORD: "changeme"
+      # NEURAI_RPC_ALLOW_IP: restrict in production (e.g. 127.0.0.1/32)
+      NEURAI_RPC_ALLOW_IP: "0.0.0.0/0"
+      NEURAI_RPC_PORT: "19101"
+      NEURAI_RPC_TIMEOUT: "240"
+      NEURAI_RPC_WORKQUEUE: "64"
+      NEURAI_RPC_THREADS: "8"
+
+      # ── Wallet ───────────────────────────────────────────────────────────
+      # NEURAI_DISABLE_WALLET: 1=disabled | 0=enabled
+      NEURAI_DISABLE_WALLET: "1"
+
+      # ── Indexes ──────────────────────────────────────────────────────────
+      NEURAI_TXINDEX: "1"
+      NEURAI_ASSETINDEX: "1"
+      NEURAI_ADDRESSINDEX: "1"
+      NEURAI_TIMESTAMPINDEX: "1"
+      NEURAI_SPENTINDEX: "1"
+      NEURAI_PUBKEYINDEX: "1"
+
+      # ── Data ─────────────────────────────────────────────────────────────
+      NEURAI_DATADIR: "/data"
+
+    volumes:
+      - neurai_data:/data
+
+    ports:
+      - "19100:19100"   # testnet P2P
+      - "19101:19101"   # testnet RPC
+
+    networks:
+      - neurai_net
+
+    healthcheck:
+      test: ["CMD", "neurai-cli", "-datadir=/data", "getblockchaininfo"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  rpc-proxy:
+    build:
+      context: ./rpc-proxy
+      dockerfile: Dockerfile
+      args:
+        REPO_URL: https://github.com/NeuraiProject/neurai-rpc-proxy.git
+        REPO_REF: master
+    image: neuraiproject/node-testnet_rpc-proxy_explorer-rpc:1.0.0-rpc-proxy
+    container_name: neurai-testnet-rpc-proxy
+    restart: unless-stopped
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+    environment:
+      PROXY_CONCURRENCY: "4"
+      PROXY_ENVIRONMENT: "Neurai Testnet"
+      PROXY_ENDPOINT: "http://rpc-proxy:19999/rpc"
+      PROXY_LOCAL_PORT: "19999"
+      NEURAI_NODE_NAME: "neuraid-testnet"
+      NEURAI_NODE_URL: "http://neuraid:19101"
+      NEURAI_RPC_USER: "neurai"
+      NEURAI_RPC_PASSWORD: "changeme"
+      NEURAI_DEPIN_ENABLED: "false"
+
+    expose:
+      - "19999"
+
+    ports:
+      - "127.0.0.1:19999:19999"
+
+    networks:
+      - neurai_net
+
+    depends_on:
+      neuraid:
+        condition: service_healthy
+
+  explorer:
+    build:
+      context: ./explorer-rpc
+      dockerfile: Dockerfile
+      args:
+        REPO_URL: https://github.com/NeuraiProject/rebel-xna-explorer.git
+        REPO_REF: master
+    container_name: neurai-testnet-explorer
+    restart: unless-stopped
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+    environment:
+      EXPLORER_BASE_CURRENCY: "XNA"
+      EXPLORER_NEURAI_URL: "http://rpc-proxy:19999/rpc"
+      EXPLORER_NEURAI_USERNAME: "anonymous"
+      EXPLORER_NEURAI_PASSWORD: "anonymous"
+      EXPLORER_HTTP_PORT: "8888"
+      EXPLORER_HEADLINE: "Neurai Testnet"
+      EXPLORER_THEME: "light"
+      EXPLORER_IPFS_GATEWAY: "https://ipfs.io/ipfs/"
+      EXPLORER_PRICE_LOOKUP_ENABLED: "false"
+
+    expose:
+      - "8888"
+
+    ports:
+      - "127.0.0.1:8888:8888"
+
+    networks:
+      - neurai_net
+
+    depends_on:
+      - rpc-proxy
+
+volumes:
+  neurai_data:
+    driver: local
+
+networks:
+  neurai_net:
+    driver: bridge

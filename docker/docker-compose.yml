@@ -94,7 +94,7 @@ services:
       - "19999"
 
     ports:
-      - "127.0.0.1:19999:19999"
+      - "19999:19999"
 
     networks:
       - neurai_net
@@ -134,7 +134,7 @@ services:
       - "8888"
 
     ports:
-      - "127.0.0.1:8888:8888"
+      - "8888:8888"
 
     networks:
       - neurai_net

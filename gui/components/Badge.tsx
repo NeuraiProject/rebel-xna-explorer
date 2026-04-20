@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Chip } from "@heroui/react";
 
 interface BadgeProps {
   children: React.ReactNode;
@@ -6,5 +7,5 @@ interface BadgeProps {
 }
 
 export function Badge({ children, size = "md" }: BadgeProps) {
-  return <span className={`badge badge-${size}`}>{children}</span>;
+  return <Chip size={size}>{children}</Chip>;
 }

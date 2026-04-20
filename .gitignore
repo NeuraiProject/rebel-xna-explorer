@@ -3,6 +3,7 @@ node_modules
 images
 config.json
 .parcel-cache
+package-lock.json
 
 # Logs
 logs

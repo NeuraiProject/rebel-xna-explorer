@@ -3,9 +3,9 @@ import axios from "axios";
 
 export interface IConfig {
   baseCurrency: string
-  raven_password: string
-  raven_username: string
-  raven_url: string
+  neurai_password: string
+  neurai_username: string
+  neurai_url: string
   httpPort: number
   headline: string
   theme: string

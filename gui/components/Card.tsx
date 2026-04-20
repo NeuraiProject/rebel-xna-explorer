@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Card as HeroCard, Separator } from "@heroui/react";
 
 interface CardProps {
   children: React.ReactNode;
@@ -6,26 +7,18 @@ interface CardProps {
   css?: any;
 }
 
-interface CardHeaderProps {
-  children: React.ReactNode;
+export function Card({ children }: CardProps) {
+  return <HeroCard>{children}</HeroCard>;
 }
 
-interface CardBodyProps {
-  children: React.ReactNode;
-}
-
-export function Card({ children, variant = "bordered", css }: CardProps) {
-  return <div className="card">{children}</div>;
-}
-
-Card.Header = function CardHeader({ children }: CardHeaderProps) {
-  return <div className="card-header">{children}</div>;
+Card.Header = function CardHeader({ children }: { children: React.ReactNode }) {
+  return <HeroCard.Header>{children}</HeroCard.Header>;
 };
 
-Card.Body = function CardBody({ children }: CardBodyProps) {
-  return <div className="card-body">{children}</div>;
+Card.Body = function CardBody({ children }: { children: React.ReactNode }) {
+  return <HeroCard.Content>{children}</HeroCard.Content>;
 };
 
 Card.Divider = function CardDivider() {
-  return <hr className="card-divider" />;
+  return <Separator />;
 };

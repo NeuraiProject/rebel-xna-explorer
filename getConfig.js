@@ -2,11 +2,11 @@ import fs from "fs";
 
 const defaultConfig = {
   baseCurrency: "XNA",
-  raven_password: "anonymous",
-  raven_username: "anonymous",
-  raven_url: "https://rpc-main.neurai.top/rpc",
+  neurai_password: "anonymous",
+  neurai_username: "anonymous",
+  neurai_url: "https://rpc-testnet.neurai.org/rpc",
   httpPort: 8888,
-  headline: "Neurai Mainnet",
+  headline: "Neurai Testnet",
   theme: "dark",
   ipfs_gateway: "https://gateway.pinata.cloud/ipfs/",
 };
@@ -30,7 +30,7 @@ function createConfigIfNeeded() {
 }
 
 function validateConfig(config) {
-  if (!config.raven_password) {
+  if (!config.neurai_password) {
     throw new Error(PROMPT_USER_TO_UPDATE_MESSAGE);
   }
 }

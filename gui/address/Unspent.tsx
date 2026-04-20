@@ -1,5 +1,5 @@
 import * as React from "react";
-const numberConverter = require("number-to-words");
+import * as numberConverter from "number-to-words";
 import { Loading } from "../components";
 import { MyCard } from "../MyCard";
 

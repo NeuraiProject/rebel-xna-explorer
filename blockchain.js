@@ -11,19 +11,19 @@ All blockchain operations to into this file
 import getConfig from "./getConfig.js";
 const CONFIG = getConfig();
 const rpc = getRPC(
-  CONFIG.raven_username,
-  CONFIG.raven_password,
-  CONFIG.raven_url
+  CONFIG.neurai_username,
+  CONFIG.neurai_password,
+  CONFIG.neurai_url
 );
 
-Reader.setURL(CONFIG.raven_url);
-Reader.setUsername(CONFIG.raven_username);
-Reader.setPassword(CONFIG.raven_password);
+Reader.setURL(CONFIG.neurai_url);
+Reader.setUsername(CONFIG.neurai_username);
+Reader.setPassword(CONFIG.neurai_password);
 
 const options = {
   auth: {
-    username: CONFIG.raven_username,
-    password: CONFIG.raven_password,
+    username: CONFIG.neurai_username,
+    password: CONFIG.neurai_password,
   },
 };
 export function getAddressUTXOs(address) {
@@ -154,7 +154,7 @@ export async function getBlockHashes(start, end) {
     requests.push(data);
   }
 
-  const rpcResponse = await axios.post(CONFIG.raven_url, requests, options);
+  const rpcResponse = await axios.post(CONFIG.neurai_url, requests, options);
 
   const hashes = rpcResponse.data.map((item) => {
     return item.result;
@@ -176,7 +176,7 @@ async function getBlocksByHashes(hashes) {
   });
 
   const blocksResponse = await axios.post(
-    CONFIG.raven_url,
+    CONFIG.neurai_url,
     blocksRequests,
     options
   );

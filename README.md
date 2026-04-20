@@ -1,6 +1,5 @@
 # Rebel Explorer
 An blockchain explorer for Neurai
-![image](https://user-images.githubusercontent.com/9694984/218311548-93d3dd3c-e606-478c-85fa-635f013ed278.png)
 
 ## Before you install
 - You need to have Node.js and Git installed.
@@ -32,9 +31,9 @@ The first time you try to start the Explorer, a config.json file will be created
 Update the config.json file with your information and restart restart the node.js app
 ```
 {
-    "raven_password": "anonymous",
-    "raven_username": "anonymous",
-    "raven_url": "https://rpc-main.neurai.org/rpc",
+    "neurai_password": "anonymous",
+    "neurai_username": "anonymous",
+    "neurai_url": "https://rpc-main.neurai.org/rpc",
     "httpPort": 8888,
     "headline": "Neurai mainnet",
     "theme": "dark",

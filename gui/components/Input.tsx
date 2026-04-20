@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Input as HeroInput } from "@heroui/react";
 
 interface InputProps {
   label?: string;
@@ -12,30 +13,27 @@ interface InputProps {
   type?: string;
 }
 
+const sizeMap = { sm: "sm", md: "md", lg: "lg", xl: "lg" } as const;
+
 export function Input({
-  label,
   placeholder,
   value,
   onChange,
   size = "md",
   width,
-  clearable = false,
-  bordered = true,
   type = "text",
 }: InputProps) {
-  const inputClass = `input ${bordered ? "input-bordered" : ""}`;
-  const style = width ? { width } : {};
+  const style = width ? { width } : undefined;
 
   return (
-    <div className="input-wrapper" style={style}>
-      {label && <label className="input-label">{label}</label>}
-      <input
-        type={type}
-        className={inputClass}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-      />
-    </div>
+    <HeroInput
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      type={type}
+      size={sizeMap[size] ?? "md"}
+      style={style}
+      fullWidth={!width}
+    />
   );
 }

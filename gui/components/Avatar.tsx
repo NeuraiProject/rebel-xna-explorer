@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Avatar as HeroAvatar } from "@heroui/react";
 
 interface AvatarProps {
   src?: string;
@@ -7,23 +8,13 @@ interface AvatarProps {
   alt?: string;
 }
 
+const sizeMap = { xs: "sm", sm: "sm", md: "md", lg: "lg", xl: "lg" } as const;
+
 export function Avatar({ src, size = "md", squared = false, alt = "" }: AvatarProps) {
-  const sizeMap = {
-    xs: "24px",
-    sm: "32px",
-    md: "40px",
-    lg: "56px",
-    xl: "72px",
-  };
-
-  const style: React.CSSProperties = {
-    width: sizeMap[size],
-    height: sizeMap[size],
-    borderRadius: squared ? "8px" : "50%",
-    objectFit: "cover",
-    display: "inline-block",
-    backgroundColor: "#27272a",
-  };
-
-  return <img src={src} alt={alt} style={style} />;
+  return (
+    <HeroAvatar size={sizeMap[size]} className={squared ? "rounded-lg" : undefined}>
+      <HeroAvatar.Image src={src} alt={alt} />
+      <HeroAvatar.Fallback>{alt?.charAt(0)?.toUpperCase() || "?"}</HeroAvatar.Fallback>
+    </HeroAvatar>
+  );
 }

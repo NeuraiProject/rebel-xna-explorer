@@ -1,13 +1,14 @@
 {
   "name": "rebel-explorer",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "private": true,
   "description": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "parcel ./gui/*.html",
+    "dev": "vite",
     "server": "node ./server.js",
-    "build": "parcel build ./gui/*.html",
+    "build": "vite build",
+    "preview": "vite preview",
     "start": "npm run server"
   },
   "keywords": [],
@@ -15,12 +16,12 @@
   "license": "MIT",
   "type": "module",
   "dependencies": {
-    "@nextui-org/react": "1.0.0-beta.12",
+    "@heroui/react": "^3.0.3",
     "@neuraiproject/neurai-history-list": "^1.2.5",
-    "@neuraiproject/neurai-reader": "^0.0.7",
-    "@neuraiproject/neurai-rpc": "^0.4.2",
+    "@neuraiproject/neurai-reader": "^0.0.9",
+    "@neuraiproject/neurai-rpc": "^0.4.7",
     "@types/lodash": "^4.14.188",
-    "@types/react": "^18.2.34",
+    "@types/react": "^19.2.14",
     "axios": "^1.6.5",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
@@ -28,12 +29,15 @@
     "image-thumbnail": "^1.0.15",
     "lodash": "^4.17.21",
     "number-to-words": "^1.2.4",
-    "parcel": "^2.11.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.2.2",
+    "@vitejs/plugin-react": "^6.0.1",
     "buffer": "^5.7.1",
-    "process": "^0.11.10"
+    "process": "^0.11.10",
+    "vite": "^8.0.8"
   }
 }

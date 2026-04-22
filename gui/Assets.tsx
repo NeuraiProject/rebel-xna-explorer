@@ -125,7 +125,7 @@ export function Assets() {
                 <Table.Cell>
                   <a
                     title={assetName}
-                    href={"index.html?route=ASSET&name=" + encodeURIComponent(assetName)}
+                    href={"/asset/" + encodeURIComponent(assetName)}
                   >
                     {assetName}
                   </a>

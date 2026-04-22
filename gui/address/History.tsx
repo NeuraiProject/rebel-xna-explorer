@@ -43,7 +43,7 @@ export function History({ address }: { address: string | null }) {
     if (index > MAX_ROWS) {
       return;
     }
-    const URL = "?route=TRANSACTION&id=" + historyItem.transactionId;
+    const URL = "/tx/" + historyItem.transactionId;
 
     for (let asset of historyItem.assets) {
       const obj = (

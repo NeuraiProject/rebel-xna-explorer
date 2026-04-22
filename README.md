@@ -1,5 +1,8 @@
 # Rebel Explorer
-An blockchain explorer for Neurai
+
+<p align="center">
+  <img src="images/image.png" alt="Rebel Explorer" />
+</p>
 
 ## Before you install
 - You need to have Node.js and Git installed.
@@ -42,6 +45,28 @@ Update the config.json file with your information and restart restart the node.j
 ```
 
 The attributes "headline" and "theme" are used for the graphical user interface. Config is only read once at startup, so you need to restart the app if you change config. 
+
+## URL scheme
+
+The explorer uses path-based URLs. Every route is served by the SPA, so
+deep-links can be shared and bookmarked.
+
+| Path                  | Shows                                        | Example                                                               |
+|-----------------------|----------------------------------------------|-----------------------------------------------------------------------|
+| `/`                   | Home — latest blocks and mempool size        | `/`                                                                   |
+| `/block/:height`      | Block by height                              | `/block/1573322`                                                      |
+| `/blockhash/:hash`    | Block by hash                                | `/blockhash/0000000000000abc…`                                        |
+| `/tx/:txid`           | Transaction details                          | `/tx/6eae2ec2f5d896a8f39e6005c19ac6abf39268edfc320a8de9deebdcc57260c0`|
+| `/address/:address`   | Address balance, UTXOs and history           | `/address/NihAfZynHrTtYPH8ZSUEhLSCVMstLSV5qN`                         |
+| `/assets`             | Paginated list of assets                     | `/assets`                                                             |
+| `/asset/:name`        | Asset detail and holders                     | `/asset/SWAP`                                                         |
+
+Notes:
+- The search bar accepts a block height, block hash, transaction id or
+  address; it routes to the matching URL automatically.
+- In-app links to a block prefer `/block/:height` when the height is known
+  and fall back to `/blockhash/:hash` otherwise.
+- Asset names are URL-encoded, so names containing `/` or `#` work.
 
 ## Do changes
 If you change the graphical user interface (gui folder), you can 
@@ -140,6 +165,10 @@ docker compose down -v
 The chain data lives in the `neurai_data` named volume, so restarts and
 `docker compose down` preserve it. Use `docker compose down -v` only if you
 want to wipe it and re-sync from scratch.
+
+## License
+
+Released under the [MIT License](LICENSE).
 
  
 

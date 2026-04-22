@@ -14,7 +14,7 @@ export function Outputs({ transaction }: { transaction: ITransaction }) {
       </Table.Header>
       <Table.Body>
         {transaction.vout.map((item: any, index:number) => {
-          const url = "/index.html?route=ADDRESS&address=";
+          const url = "/address/";
  
           if (
             !item.scriptPubKey.addresses ||

@@ -54,7 +54,7 @@ export function TransactionDetails({ config, transaction }) {
             <Table.Body>
               <Table.Row>
                 <Table.Cell>
-                  <a href={"?route=BLOCK&hash=" + transaction.blockhash}>
+                  <a href={"/block/" + transaction.height}>
                     {transaction.height.toLocaleString()}
                   </a>
                 </Table.Cell>

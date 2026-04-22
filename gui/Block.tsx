@@ -68,7 +68,7 @@ function Transactions({ block }) {
         if (t.txid) {
           t = t.txid;
         }
-        const URL = "index.html?route=TRANSACTION&id=" + t;
+        const URL = "/tx/" + t;
 
         return (
           <li key={t}>

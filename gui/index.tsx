@@ -4,7 +4,6 @@ import { Address } from "./address/Address";
 
 import { Blocks } from "./Blocks";
 import Routes from "./Routes";
-import { getParam } from "./getParam";
 import { Block } from "./Block";
 import { Navigator, SearchBar } from "./Navigator";
 import { Spacer, Text } from "./components";
@@ -18,10 +17,32 @@ const views = {
   [Routes.BLOCKS]: <Blocks />,
   [Routes.ADDRESS]: <Address />,
   [Routes.BLOCK]: <Block />,
+  [Routes.BLOCKHASH]: <Block />,
   [Routes.TRANSACTION]: <Transaction />,
   [Routes.ASSETS]: <Assets />,
   [Routes.ASSET]: <Asset />,
 };
+
+function resolveRoute(): string {
+  const segments = window.location.pathname.split("/").filter(Boolean);
+  if (segments.length === 0) return Routes.HOME;
+  switch (segments[0]) {
+    case "block":
+      return Routes.BLOCK;
+    case "blockhash":
+      return Routes.BLOCKHASH;
+    case "tx":
+      return Routes.TRANSACTION;
+    case "address":
+      return Routes.ADDRESS;
+    case "asset":
+      return Routes.ASSET;
+    case "assets":
+      return Routes.ASSETS;
+    default:
+      return Routes.HOME;
+  }
+}
 
 function CurrentView({ route }) {
   return views[route];
@@ -31,12 +52,7 @@ function App() {
 
   const runOnce = [];
   React.useEffect(() => {
-    const route = getParam("route");
-    if (!route) {
-      setRoute(Routes.HOME); //Default to HOME
-    } else {
-      setRoute(route);
-    }
+    setRoute(resolveRoute());
   }, runOnce);
 
   if (route === null) {

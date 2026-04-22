@@ -79,7 +79,7 @@ export function Navigator() {
           />
           <span>{networkLabel}</span>
         </div>
-        <a href="index.html?route=ASSETS" className="nav-btn">
+        <a href="/assets" className="nav-btn">
           Assets
         </a>
         <button
@@ -121,13 +121,14 @@ export function SearchBar() {
     if (!value) return;
     axios.get("/gettype/" + value).then((response) => {
       if (response.data.type === "BLOCK") {
-        window.location.href = "index.html?route=BLOCK&hash=" + value;
+        const path = value.length > 15 ? "/blockhash/" : "/block/";
+        window.location.href = path + value;
       }
       if (response.data.type === "TRANSACTION") {
-        window.location.href = "index.html?route=TRANSACTION&id=" + value;
+        window.location.href = "/tx/" + value;
       }
       if (response.data.type === "ADDRESS") {
-        window.location.href = "index.html?route=ADDRESS&address=" + value;
+        window.location.href = "/address/" + value;
       }
       if (response.data.type === "UNKNOWN") {
         alert("Sorry, do not know what to do with " + value);

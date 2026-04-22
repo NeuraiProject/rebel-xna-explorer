@@ -80,7 +80,7 @@ export function Asset() {
       </Table.Header>
       <Table.Body>
         {rows.map((row, idx) => {
-          const URL = "index.html?route=ADDRESS&address=" + row.address;
+          const URL = "/address/" + row.address;
           return (
             <Table.Row key={row.address}>
               <Table.Cell>

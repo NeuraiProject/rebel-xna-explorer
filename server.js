@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import path from "path";
 
 import getConfig from "./getConfig.js";
 import thumbnail from "./thumbnail.js";
@@ -44,6 +45,19 @@ app.use(express.json());
 
 //STATIC CONTENT
 app.use(express.static("dist"));
+
+//SPA client routes — serve index.html so the React app can resolve the path
+const SPA_ROUTES = [
+  "/block/*",
+  "/blockhash/*",
+  "/tx/*",
+  "/address/*",
+  "/asset/*",
+  "/assets",
+];
+app.get(SPA_ROUTES, (_, res) => {
+  res.sendFile(path.resolve("dist/index.html"));
+});
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

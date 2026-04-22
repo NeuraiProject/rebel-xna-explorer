@@ -61,7 +61,8 @@ export function Blocks() {
       selectionMode="single"
       onSelectionChange={(keys) => {
         const blockHash = Object.values(keys)[0];
-        const URL = "index.html?route=BLOCK&hash=" + blockHash;
+        const block = blocks.find((b) => b.hash === blockHash);
+        const URL = block ? "/block/" + block.height : "/blockhash/" + blockHash;
         window.location.href = URL;
       }}
     >
@@ -73,7 +74,7 @@ export function Blocks() {
       </Table.Header>
       <Table.Body>
         {blocks.map((block) => {
-          const URL = "index.html?route=BLOCK&hash=" + block.hash;
+          const URL = "/block/" + block.height;
 
           const time = formatDateTime(block.time);
           return (

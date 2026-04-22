@@ -1,4 +1,7 @@
-export function getParam(name: string) {
-  const searchParams = new URLSearchParams(document.location.search);
-  return searchParams.get(name);
+export function getParam(_name: string) {
+  const segments = window.location.pathname.split("/").filter(Boolean);
+  if (segments.length >= 2) {
+    return decodeURIComponent(segments[1]);
+  }
+  return null;
 }

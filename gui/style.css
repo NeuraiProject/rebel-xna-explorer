@@ -393,9 +393,30 @@ a.navbar-home:hover {
   color: #111827;
 }
 
+.date-year-short {
+  display: none;
+}
+
 @media screen and (max-width: 760px) {
+  .outputs-table table td,
+  .outputs-table table th {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 0;
+  }
+
+  .date-year-full,
+  .date-seconds {
+    display: none;
+  }
+  .date-year-short {
+    display: inline;
+  }
+
   .navbar {
     flex-wrap: wrap;
+    padding: 2px;
   }
 
   .navbar-brand {
@@ -404,11 +425,10 @@ a.navbar-home:hover {
   }
 
   .navbar-right {
-    margin-left: 0;
-    width: 100%;
-    order: 2;
-    margin-bottom: 12px;
-    justify-content: space-between;
+    margin-left: auto;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    padding: 2px;
   }
 
   .navbar-collapse {

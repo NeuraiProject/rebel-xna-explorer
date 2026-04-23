@@ -22,7 +22,7 @@ export function Transaction() {
 
   return (
     <>
-      <MyCard header="Transaction id" body={id} />
+      <MyCard header="Transaction id" body={<span style={{ overflowWrap: "anywhere", wordBreak: "break-all" }}>{id}</span>} />
       <Spacer />
       <TransactionDetails config={config} transaction={transaction} />
       <Spacer />

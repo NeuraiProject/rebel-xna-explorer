@@ -7,6 +7,7 @@ export function Outputs({ transaction }: { transaction: ITransaction }) {
     return null;
   }
   return (
+    <div className="outputs-table">
     <Table style={{ tableLayout: "fixed" }}>
       <Table.Header>
         <Table.Column>Address</Table.Column>
@@ -48,5 +49,6 @@ export function Outputs({ transaction }: { transaction: ITransaction }) {
         })}
       </Table.Body>
     </Table>
+    </div>
   );
 }

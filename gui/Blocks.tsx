@@ -22,11 +22,24 @@ function pad(n: number): string {
   return n < 10 ? "0" + n : "" + n;
 }
 
-function formatDateTime(unix: number): string {
+function FormattedDateTime({ unix }: { unix: number }) {
   const d = new Date(unix * 1000);
-  const date = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
-  const time = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-  return `${date} ${time}`;
+  const dd = pad(d.getDate());
+  const mm = pad(d.getMonth() + 1);
+  const yyyy = d.getFullYear();
+  const yy = pad(yyyy % 100);
+  const hh = pad(d.getHours());
+  const mi = pad(d.getMinutes());
+  const ss = pad(d.getSeconds());
+  return (
+    <>
+      {dd}/{mm}/<span className="date-year-full">{yyyy}</span>
+      <span className="date-year-short">{yy}</span>
+      {" "}
+      {hh}:{mi}
+      <span className="date-seconds">:{ss}</span>
+    </>
+  );
 }
 export function Blocks() {
   const [blocks, setBlocks] = React.useState<IBlock[]>([]);
@@ -45,7 +58,7 @@ export function Blocks() {
     }
     work();
 
-    const interval = setInterval(work, 20000);
+    const interval = setInterval(work, 10000);
     return () => {
       clearInterval(interval as any);
     };
@@ -76,7 +89,6 @@ export function Blocks() {
         {blocks.map((block) => {
           const URL = "/block/" + block.height;
 
-          const time = formatDateTime(block.time);
           return (
             <Table.Row key={block.hash}>
               <Table.Cell>
@@ -92,7 +104,7 @@ export function Blocks() {
                   fontVariantNumeric: "tabular-nums",
                 }}
               >
-                {time}
+                <FormattedDateTime unix={block.time} />
               </Table.Cell>
             </Table.Row>
           );

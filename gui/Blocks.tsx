@@ -50,7 +50,6 @@ export function Blocks() {
       const axiosResponse = await axios.get(URL);
 
       const b = axiosResponse.data;
-      window.document.title = b[0].height.toLocaleString();
       setBlocks(b);
 
       const r = await axios.get("/api/mempool");

@@ -13,7 +13,7 @@ export function Balance({
   xnaUsdRate,
   assets = [],
 }: IBalanceWithAssetsProps) {
-  const balanceAmount = balance / 100000000;
+  const balanceAmount = Number(balance) / 100000000;
   const xnaDisplay = getTwoDecimalTrunc(balanceAmount).toLocaleString();
   const usdDisplay =
     baseCurrency === "XNA" && xnaUsdRate
@@ -23,7 +23,7 @@ export function Balance({
   const assetRows = (assets || [])
     .map((asset) => {
       const name = asset.assetName;
-      const amount = asset.balance / 100000000;
+      const amount = Number(asset.balance) / 100000000;
       return { name, amount };
     })
     .filter((a) => a.amount !== 0);

@@ -12,6 +12,7 @@ import { Received } from "./Received";
 import { Unspent } from "./Unspent";
 import { AssetTable } from "./AssetTable";
 import { History } from "./History";
+import { Amount } from "../amount";
 
 export function Address() {
   const address = getParam("address");
@@ -61,7 +62,7 @@ export interface IReceivedProps {
 }
 export interface IBalanceProps {
   baseCurrency: string;
-  balance: number;
+  balance: Amount;
   xnaUsdRate: number | null;
 }
 

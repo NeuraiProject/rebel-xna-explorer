@@ -54,12 +54,17 @@ export function TransactionDetails({ config, transaction }) {
             <Table.Body>
               <Table.Row>
                 <Table.Cell>
-                  <a href={"/block/" + transaction.height}>
-                    {transaction.height.toLocaleString()}
-                  </a>
+                  {/* Mempool transactions have no height yet */}
+                  {transaction.height === undefined ? (
+                    "Unconfirmed"
+                  ) : (
+                    <a href={"/block/" + transaction.height}>
+                      {transaction.height.toLocaleString()}
+                    </a>
+                  )}
                 </Table.Cell>
                 <Table.Cell>
-                  {transaction.confirmations.toLocaleString()}
+                  {(transaction.confirmations ?? 0).toLocaleString()}
                 </Table.Cell>
               </Table.Row>
             </Table.Body>

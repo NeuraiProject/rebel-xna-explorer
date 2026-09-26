@@ -72,7 +72,7 @@ export function Blocks() {
     <Table
       selectionMode="single"
       onSelectionChange={(keys) => {
-        const blockHash = Object.values(keys)[0];
+        const blockHash = [...keys][0];
         const block = blocks.find((b) => b.hash === blockHash);
         const URL = block ? "/block/" + block.height : "/blockhash/" + blockHash;
         window.location.href = URL;

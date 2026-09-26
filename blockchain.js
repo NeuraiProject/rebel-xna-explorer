@@ -1,7 +1,6 @@
 import { getRPC, methods } from "@neuraiproject/neurai-rpc";
-import Reader from "@neuraiproject/neurai-reader";
+import { createReader } from "@neuraiproject/neurai-reader";
 
-import axios from "axios";
 /*
 
 All blockchain operations to into this file
@@ -16,44 +15,30 @@ const rpc = getRPC(
   CONFIG.neurai_url
 );
 
-Reader.setURL(CONFIG.neurai_url);
-Reader.setUsername(CONFIG.neurai_username);
-Reader.setPassword(CONFIG.neurai_password);
+const Reader = createReader({
+  url: CONFIG.neurai_url,
+  username: CONFIG.neurai_username,
+  password: CONFIG.neurai_password,
+});
 
-const options = {
-  auth: {
-    username: CONFIG.neurai_username,
-    password: CONFIG.neurai_password,
-  },
-};
-export function getAddressUTXOs(address) {
+export async function getAddressUTXOs(address) {
   //Fetch UTXOs for XNA and for Assets
-
-  const myPromise = new Promise((resolve, reject) => {
-    //GET XNA
-    const p1 = rpc("getaddressutxos", [address]);
-    //GET ASSETS
-    const p2 = rpc("getaddressutxos", [
-      {
-        addresses: [address],
-        assetName: "*",
-      },
+  try {
+    const [xna, assets] = await Promise.all([
+      //GET XNA
+      rpc(methods.getaddressutxos, [address]),
+      //GET ASSETS
+      rpc(methods.getaddressutxos, [
+        {
+          addresses: [address],
+          assetName: "*",
+        },
+      ]),
     ]);
-    Promise.all([p1, p2])
-      .then((values) => {
-        const result = [];
-
-        values[0].map((item) => result.push(item));
-        values[1].map((item) => result.push(item));
-
-        resolve(result);
-      })
-      .catch((e) => {
-        reject("Could not get UTXOs");
-      });
-  });
-
-  return myPromise;
+    return [...xna, ...assets];
+  } catch (e) {
+    throw new Error("Could not get UTXOs", { cause: e });
+  }
 }
 export function getAssetData(name) {
   return Reader.getAsset(name);
@@ -66,15 +51,7 @@ export async function getTransaction(id) {
 }
 
 export async function getCoinsInCirculation() {
-  const method = "gettxoutsetinfo";
-  const args = [];
-  return rpc(method, args);
-}
-export async function listAssets() {
-  const asset = "*";
-  const verbose = true;
-
-  return rpc("listassets", [asset, verbose]);
+  return rpc(methods.gettxoutsetinfo, []);
 }
 export async function getAddressBalance(address) {
   const balance = await Reader.getNeuraiBalance(address);
@@ -90,17 +67,18 @@ export async function getType(value) {
   if (value.length === 64) {
     //block or transaction
     try {
-      const block = await rpc("getblock", [value]);
+      const block = await rpc(methods.getblock, [value]);
       if (block) {
         return "BLOCK";
       }
     } catch (e) {}
 
     try {
-      const args = [];
-      args.push(value);
-      args.push(1); //verbose
-      const transaction = await rpc("getrawtransaction", args);
+      const verbose = 1;
+      const transaction = await rpc(methods.getrawtransaction, [
+        value,
+        verbose,
+      ]);
 
       if (transaction) {
         return "TRANSACTION";
@@ -108,29 +86,28 @@ export async function getType(value) {
     } catch (e) {}
   } else {
     //probably an address
-    const valid = await rpc("validateaddress", [value]);
-    if (valid.isvalid === true) {
-      return "ADDRESS";
-    }
+    try {
+      const valid = await rpc(methods.validateaddress, [value]);
+      if (valid && valid.isvalid === true) {
+        return "ADDRESS";
+      }
+    } catch (e) {}
   }
 
   //Check if block height
-  const isNumber = Number.isNaN(Number(value)) === false;
+  const isHeight = /^[0-9]+$/.test(value);
 
-  if (isNumber) {
+  if (isHeight) {
     try {
-      const block = await getBlockByHeight(parseFloat(value));
+      const block = await getBlockByHeight(parseInt(value, 10));
 
       if (block) {
         return "BLOCK";
       }
-    } catch (e) {
-      console.dir(e);
-    }
+    } catch (e) {}
   }
 
   return "UNKNOWN";
-  //Check if block
 }
 export function getBlockByHeight(height) {
   return Reader.getBlockByHeight(height);
@@ -139,57 +116,16 @@ export function getBestBlockHash() {
   return Reader.getBestBlockHash();
 }
 
-export async function getBlockHash(hash) {
-  return Reader.getBlockByHash(hash);
-}
-export async function getBlockHashes(start, end) {
-  const requests = [];
-  for (let i = start; i <= end; i++) {
-    const data = {
-      jsonrpc: "2.0",
-      id: "getblockhash_" + i,
-      method: "getblockhash",
-      params: [i],
-    };
-    requests.push(data);
-  }
-
-  const rpcResponse = await axios.post(CONFIG.neurai_url, requests, options);
-
-  const hashes = rpcResponse.data.map((item) => {
-    return item.result;
-  });
-
-  return hashes;
-}
-
-async function getBlocksByHashes(hashes) {
-  const blocksRequests = [];
-  hashes.map((hash) => {
-    const data = {
-      jsonrpc: "2.0",
-      id: Math.random(),
-      method: "getblock",
-      params: [hash],
-    };
-    blocksRequests.push(data);
-  });
-
-  const blocksResponse = await axios.post(
-    CONFIG.neurai_url,
-    blocksRequests,
-    options
-  );
-
-  const blocks = blocksResponse.data.map((item) => item.result);
-  return blocks;
-}
-
 export async function getAssets() {
   return Reader.getAllAssets();
 }
 export async function getAddressesByAsset(name) {
-  return rpc("listaddressesbyasset", [name]);
+  const addresses = await rpc(methods.listaddressesbyasset, [name]);
+  //The node answers invalid asset names (e.g. "#QUALIFIER!") with a string
+  if (typeof addresses === "string") {
+    throw new Error(addresses);
+  }
+  return addresses;
 }
 export async function getAddressDeltas(address) {
   return Reader.getAddressDeltas(address);
@@ -207,14 +143,9 @@ export default {
   getAssets,
   getBlock,
   getBlockByHeight,
-  getBlockHash,
-  getBlockHashes,
   getBestBlockHash,
-  getBlock,
   getCoinsInCirculation,
   getRawMempool,
   getTransaction,
   getType,
-
-  listAssets,
 };

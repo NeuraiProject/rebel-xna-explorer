@@ -1,5 +1,9 @@
+import { Amount } from "../amount";
+
 export interface ITransaction {
-  blocktime: number;
-  vin: { value: number; coinbase?: boolean }[];
-  vout: { value: number; scriptPubKey?: any }[];
+  blocktime?: number;
+  height?: number;
+  confirmations?: number;
+  vin: { value?: Amount; coinbase?: string; txid?: string; vout?: number; address?: string }[];
+  vout: { value: Amount; n?: number; scriptPubKey?: any }[];
 }

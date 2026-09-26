@@ -6,6 +6,7 @@ import { MyCard } from "./MyCard";
 import { AssetImageLink } from "./AssetImageLink";
 import { AssetModal } from "./AssetModal";
 import useAssetData from "./useAssetData";
+import { formatAmount } from "./amount";
 
 export function Assets() {
   const [assets, setAssets] = React.useState([]);
@@ -159,7 +160,7 @@ function AssetAmount({ assetName }) {
     return null;
   }
 
-  return <div>{asset.amount.toLocaleString()}</div>;
+  return <div>{formatAmount(asset.amount)}</div>;
 }
 
 const assetAddressCountCache: { [name: string]: Promise<number> } = {};

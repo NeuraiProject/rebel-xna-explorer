@@ -1,24 +1,21 @@
+import { toSatoshis } from "../amount";
 import { ITransaction } from "./ITransaction";
 
-
-export function getFee(transaction: ITransaction): number | string {
-  let inputValue = 0;
-  let outputValue = 0;
-
-  type TransactionValue = { value: number; };
-
+//Returns the fee in satoshis
+export function getFee(transaction: ITransaction): bigint | string {
   const isCoinbaseTransaction = !!transaction.vin[0].coinbase;
 
   if (isCoinbaseTransaction === true) {
     return "Coinbase transaction, no fee";
   }
-  transaction.vin.map(
-    (input: TransactionValue) => (inputValue += input.value || 0)
+  const inputValue = transaction.vin.reduce(
+    (sum, input) => sum + toSatoshis(input.value),
+    0n
   );
-  transaction.vout.map(
-    (output: TransactionValue) => (outputValue += output.value)
+  const outputValue = transaction.vout.reduce(
+    (sum, output) => sum + toSatoshis(output.value),
+    0n
   );
 
-  const fee = inputValue - outputValue;
-  return fee;
+  return inputValue - outputValue;
 }

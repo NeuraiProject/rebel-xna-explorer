@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Table } from "../components";
+import { formatAmount, formatSatoshis, toSatoshis } from "../amount";
 import { ITransaction } from "./ITransaction";
 import { useTransaction } from "./useTransaction";
 
@@ -17,25 +18,29 @@ export function Inputs({ transaction }: { transaction: ITransaction }) {
           {transaction.vin.map((item: any) => {
             //If this is a coinbase transaction then the input value is the sum of all outputs
             if (item.coinbase) {
-              let value = 0;
-              transaction.vout.map((out) => (value += out.value));
+              const value = transaction.vout.reduce(
+                (sum, out) => sum + toSatoshis(out.value),
+                0n
+              );
               return (
-                <Table.Row key={"input" + Math.random()}>
+                <Table.Row key="input_coinbase">
                   <Table.Cell>Coinbase</Table.Cell>
-                  <Table.Cell>{value}</Table.Cell>
+                  <Table.Cell>{formatSatoshis(value)}</Table.Cell>
                 </Table.Row>
               );
             }
+            //Asset inputs carry 0 XNA, and value is missing without -spentindex
+            const lookupPrevout = item.value === undefined || item.value === 0;
             return (
-              <Table.Row key={"input_" + item.address}>
+              <Table.Row key={"input_" + item.txid + "_" + item.vout}>
                 <Table.Cell>
                   <a href={url + item.address}>{item.address}</a>
                 </Table.Cell>
                 <Table.Cell>
-                  {item.value === 0 ? (
+                  {lookupPrevout ? (
                     <AssetData txid={item.txid} index={item.vout} />
                   ) : (
-                    item.value.toLocaleString()
+                    formatAmount(item.value)
                   )}
                 </Table.Cell>
               </Table.Row>
@@ -55,14 +60,17 @@ function AssetData({ txid, index }: { txid: string; index: number }) {
 
   const utxo = transaction.vout[index];
 
-  const asset = utxo.scriptPubKey.asset;
+  if (!utxo) {
+    return null;
+  }
+  const asset = utxo.scriptPubKey?.asset;
 
   if (asset) {
     return (
       <div>
-        {asset.amount} {asset.name}
+        {formatAmount(asset.amount)} {asset.name}
       </div>
     );
   }
-  return null;
+  return <div>{formatAmount(utxo.value)}</div>;
 }

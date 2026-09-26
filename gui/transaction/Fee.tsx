@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Table } from "../components";
+import { formatSatoshis } from "../amount";
 import { useNeuraiUSD } from "../useNeuraiUSD";
 import { ITransaction } from "./ITransaction";
 import { getFee } from "./getFee";
@@ -11,11 +12,13 @@ export function Fee({
   transaction: ITransaction;
 }) {
   const xnaUsdRate = useNeuraiUSD();
-  const fee = getFee(transaction);
+  const feeSatoshis = getFee(transaction);
+  const fee =
+    typeof feeSatoshis === "bigint" ? formatSatoshis(feeSatoshis) : feeSatoshis;
 
   let usdDisplayValue = "";
-  if (typeof fee === "number" && xnaUsdRate) {
-    usdDisplayValue = "" + fee * xnaUsdRate;
+  if (typeof feeSatoshis === "bigint" && xnaUsdRate) {
+    usdDisplayValue = "" + (Number(feeSatoshis) / 1e8) * xnaUsdRate;
   }
 
   if (baseCurrency !== "XNA") {

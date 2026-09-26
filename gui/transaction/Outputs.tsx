@@ -1,6 +1,7 @@
 import * as React from "react";
 import { ITransaction } from "./ITransaction";
 import { Table } from "../components";
+import { formatAmount } from "../amount";
 
 export function Outputs({ transaction }: { transaction: ITransaction }) {
   if (!transaction) {
@@ -16,13 +17,14 @@ export function Outputs({ transaction }: { transaction: ITransaction }) {
       <Table.Body>
         {transaction.vout.map((item: any, index:number) => {
           const url = "/address/";
- 
+          const key = "output_" + (item.n ?? index);
+
           if (
             !item.scriptPubKey.addresses ||
             item.scriptPubKey.addresses.length === 0
           ) {
             return (
-              <Table.Row>
+              <Table.Row key={key}>
                 <Table.Cell>
                  OP RETURN
                 </Table.Cell>
@@ -32,14 +34,14 @@ export function Outputs({ transaction }: { transaction: ITransaction }) {
           }
           const addy = item.scriptPubKey.addresses[0];
 
-          let amount = item.value.toLocaleString();
+          let amount = formatAmount(item.value);
           const asset = item.scriptPubKey.asset;
 
           if (asset) {
-            amount = asset.amount.toLocaleString() + " " + asset.name;
+            amount = formatAmount(asset.amount) + " " + asset.name;
           }
           return (
-            <Table.Row>
+            <Table.Row key={key}>
               <Table.Cell>
                 <a href={url + addy}>{addy}</a>
               </Table.Cell>

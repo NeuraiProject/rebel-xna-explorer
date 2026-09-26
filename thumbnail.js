@@ -1,4 +1,4 @@
-import imageThumbnail from "image-thumbnail";
+import sharp from "sharp";
 import blockchain from "./blockchain.js";
 import fs from "fs";
 import axios from "axios";
@@ -44,6 +44,20 @@ setInterval(function () {
 const dir = path.resolve("./images");
 if (!fs.existsSync(dir)) {
   fs.mkdirSync(dir);
+}
+
+//Download the image and scale it down, keeping the original format
+async function createThumbnail(url, width, maxSize) {
+  const response = await axios.get(url, {
+    responseType: "arraybuffer",
+    timeout: 30000,
+    //The size from HTTP HEAD can lie, never download more than maxSize
+    maxContentLength: maxSize,
+  });
+  return sharp(Buffer.from(response.data))
+    .resize({ width, withoutEnlargement: true, fit: "contain" })
+    .flatten({ background: "#ffffff" })
+    .toBuffer();
 }
 
 export default async function thumbnail(request, response) {
@@ -166,12 +180,8 @@ export default async function thumbnail(request, response) {
 
     const MAX_SIZE = 10 * 1024 * 1024;
     if (size < MAX_SIZE) {
-      const options = {
-        width: 300,
-      };
-
       //Fetch the binary data for the image from IPFS
-      const thumbnail = await imageThumbnail({ uri: url }, options);
+      const thumbnail = await createThumbnail(url, 300, MAX_SIZE);
 
       fs.writeFileSync(contentFilePath, thumbnail);
       fs.writeFileSync(contentTypeFilePath, contentType);

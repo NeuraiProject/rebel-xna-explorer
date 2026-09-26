@@ -1,5 +1,6 @@
 import * as React from "react";
 import axios from "axios";
+import { Amount } from "./amount";
 const assetDataCache = {};
 
 /*
@@ -9,7 +10,7 @@ const assetDataCache = {};
 
 export interface IAsset {
   name: string;
-  amount: number;
+  amount: Amount;
   units: number;
   reissuable: number;
   has_ipfs: number;

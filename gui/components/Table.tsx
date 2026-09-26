@@ -78,7 +78,11 @@ Table.Body = function TableBody({ children, onRowClick }: any) {
     <tbody>
       {React.Children.map(children, (child) => {
         if (React.isValidElement(child)) {
-          return React.cloneElement(child as any, { onRowClick });
+          //React never passes "key" as a prop, hand it over as rowKey
+          return React.cloneElement(child as any, {
+            onRowClick,
+            rowKey: child.key,
+          });
         }
         return child;
       })}
@@ -86,10 +90,10 @@ Table.Body = function TableBody({ children, onRowClick }: any) {
   );
 };
 
-Table.Row = function TableRow({ children, onRowClick, ...props }: any) {
+Table.Row = function TableRow({ children, onRowClick, rowKey, ...props }: any) {
   const handleClick = () => {
-    if (onRowClick && props.key) {
-      onRowClick(props.key);
+    if (onRowClick && rowKey !== null && rowKey !== undefined) {
+      onRowClick(String(rowKey));
     }
   };
 

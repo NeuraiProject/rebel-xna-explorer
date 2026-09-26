@@ -31,9 +31,6 @@ app.use(compression());
 app.set("json spaces", 4);
 const port = process.env.PORT || CONFIG.httpPort || 80;
 
-//Send human readable JSON
-app.set("json spaces", 4);
-
 //USE CORS
 app.use(cors());
 
@@ -75,32 +72,16 @@ app.get("/gui-settings", (_, response) => {
     price_lookup_enabled: CONFIG.price_lookup_enabled !== false,
   });
 });
-app.get("/api/addresses", function (_, response) {
-  const find = {
-    selector: {
-      type: "ADDRESS",
-    },
-    fields: ["_id"],
-  };
-  db.find(find)
-    .then((data) => {
-      const a = data.docs.map(function (obj) {
-        return obj._id;
-      });
-      a.sort();
-      response.send(a);
-    })
-    .catch((e) => {
-      response.status(500).send({
-        error: "" + e,
-      });
-    });
-});
 app.get("/thumbnail", thumbnail);
 
 app.get("/gettype/:value", async function (req, res) {
-  const type = await blockchain.getType(req.params.value);
-  res.send({ type });
+  try {
+    const type = await blockchain.getType(req.params.value);
+    res.send({ type });
+  } catch (e) {
+    console.dir(e);
+    res.status(500).send({ error: "" + e });
+  }
 });
 
 app.get("/api/addressdeltas/:address", (request, response) => {
@@ -118,15 +99,24 @@ app.get("/api/addressdeltas/:address", (request, response) => {
   });
 });
 
-app.get("/api/balancebyaddress/:address", (req, res) => {
+app.get("/api/balancebyaddress/:address", async (req, res) => {
   const address = req.params.address;
-  const balance = blockchain.getAddressBalance(address);
-
-  res.send(balance);
+  try {
+    const balance = await blockchain.getAddressBalance(address);
+    res.send(balance);
+  } catch (e) {
+    console.dir(e);
+    res.status(500).send({ error: "" + e });
+  }
 });
 app.get("/api/mempool", async (_, response) => {
-  const mempool = await blockchain.getRawMempool();
-  response.send(mempool);
+  try {
+    const mempool = await blockchain.getRawMempool();
+    response.send(mempool);
+  } catch (e) {
+    console.dir(e);
+    response.status(500).send({ error: "" + e });
+  }
 });
 app.get("/memory", function (_, response) {
   const m = process.memoryUsage();
@@ -196,7 +186,8 @@ app.get("/api/assetaddresses/:name", async (req, res) => {
       address,
       amount,
     }));
-    holders.sort((a, b) => b.amount - a.amount);
+    //Amounts can be decimal strings when a number would lose precision
+    holders.sort((a, b) => Number(b.amount) - Number(a.amount));
 
     let ownerAddress = null;
     let ownerAmount = null;
@@ -230,7 +221,7 @@ app.get("/api/assets", (request, response) => {
   promise
     .then((assets) => response.send(assets))
     .catch((e) => {
-      res.status(500).send({ error: "" + e });
+      response.status(500).send({ error: "" + e });
     });
 });
 
@@ -250,9 +241,14 @@ app.get("/api/transactions/:id", async (request, response) => {
     });
 });
 app.get("/api/bestblock", async (request, response) => {
-  const hash = await blockchain.getBestBlockHash();
-  const block = await blockchain.getBlock(hash);
-  response.send(block);
+  try {
+    const hash = await blockchain.getBestBlockHash();
+    const block = await blockchain.getBlock(hash);
+    response.send(block);
+  } catch (e) {
+    console.dir(e);
+    response.status(500).send({ error: "" + e });
+  }
 });
 
 app.get("/api/addresses/:address", (request, response) => {

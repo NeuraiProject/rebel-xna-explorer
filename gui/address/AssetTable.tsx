@@ -12,7 +12,7 @@ export function AssetTable({ assets }) {
       <Table.Body>
         {assets.map((asset) => {
           const name = asset.assetName;
-          const balance = asset.balance / 100000000;
+          const balance = Number(asset.balance) / 100000000;
 
           if (balance === 0) {
             return null;

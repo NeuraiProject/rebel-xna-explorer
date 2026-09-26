@@ -2,6 +2,7 @@ import * as React from "react";
 import { Loading, Table } from "../components";
 import { useFetch } from "../useFetch";
 import { getHistory } from "@neuraiproject/neurai-history-list";
+import { formatAmount } from "../amount";
 export function History({ address }: { address: string | null }) {
   const URL = "/api/addressdeltas/" + address;
 
@@ -40,18 +41,18 @@ export function History({ address }: { address: string | null }) {
   const MAX_ROWS = 100;
 
   history.map((historyItem, index) => {
-    if (index > MAX_ROWS) {
+    if (index >= MAX_ROWS) {
       return;
     }
     const URL = "/tx/" + historyItem.transactionId;
 
     for (let asset of historyItem.assets) {
       const obj = (
-        <Table.Row key={historyItem.transactionId}>
+        <Table.Row key={historyItem.transactionId + "_" + asset.assetName}>
           <Table.Cell>
             <a href={URL}>{asset.assetName}</a>
           </Table.Cell>
-          <Table.Cell>{asset.value.toLocaleString()}</Table.Cell>
+          <Table.Cell>{formatAmount(asset.value)}</Table.Cell>
           <Table.Cell>{historyItem.blockHeight.toLocaleString()}</Table.Cell>
           <Table.Cell>
             <Time height={historyItem.blockHeight}></Time>

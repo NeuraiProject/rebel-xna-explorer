@@ -5,15 +5,16 @@ import { Meta } from "./AssetModal";
 import { Loading, Spacer, Table } from "./components";
 import { MyCard } from "./MyCard";
 import useAssetData from "./useAssetData";
+import { Amount, formatAmount } from "./amount";
 
 interface IHolder {
   address: string;
-  amount: number;
+  amount: Amount;
 }
 
 interface IAssetAddressesResponse {
   ownerAddress: string | null;
-  ownerAmount: number | null;
+  ownerAmount: Amount | null;
   holders: IHolder[];
 }
 
@@ -98,7 +99,7 @@ export function Asset() {
               <Table.Cell>
                 <a href={URL}>{row.address}</a>
               </Table.Cell>
-              <Table.Cell>{row.amount.toLocaleString()}</Table.Cell>
+              <Table.Cell>{formatAmount(row.amount)}</Table.Cell>
             </Table.Row>
           );
         })}

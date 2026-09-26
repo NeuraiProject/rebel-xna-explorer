@@ -165,7 +165,8 @@ app.get("/api/blocks", async (req, res) => {
 
     const blocks = [];
 
-    for (let i = 0; i < 10; i++) {
+    //Stop at the genesis block, it has no previousblockhash
+    for (let i = 0; i < 10 && hash; i++) {
       let block = await blockchain.getBlock(hash);
 
       blocks.push(block);

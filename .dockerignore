@@ -12,6 +12,9 @@ config.json
 # Thumbnail cache written by thumbnail.js at runtime.
 images
 
+# Local working notes, screenshots and mockups.
+tmp
+
 # Other services' build folders and the compose files aren't part of the
 # explorer image; only the explorer entrypoint is copied in.
 docker/node

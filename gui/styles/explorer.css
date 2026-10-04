@@ -1,0 +1,442 @@
+/*
+ * Explorer-only tokens and components, on top of the wallet's theme.
+ *
+ * Secondary text uses solid grays instead of the wallet's opacities
+ * (text-base-content/55): on a white card those land near 3.9:1, under the
+ * 4.5:1 that small text needs.
+ */
+
+@theme inline {
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* The wallet's orange, for marks and accents, never for small text */
+  --color-brand: #f97316;
+  /* Chart bars: passes 3:1 against both card colors */
+  --color-bar: #e8670f;
+
+  --color-link: var(--nx-link);
+  --color-muted: var(--nx-muted);
+  --color-subtle: var(--nx-subtle);
+  --color-sunken: var(--nx-sunken);
+  --color-accent-line: var(--nx-accent-line);
+  --color-ok: var(--nx-ok);
+  --color-ok-soft: var(--nx-ok-soft);
+  --color-ok-line: var(--nx-ok-line);
+  --color-warn: var(--nx-warn);
+  --color-warn-soft: var(--nx-warn-soft);
+  --color-warn-line: var(--nx-warn-line);
+  --color-bad: var(--nx-bad);
+  --color-bad-soft: var(--nx-bad-soft);
+  --color-tip: var(--nx-tip);
+  --color-tip-content: var(--nx-tip-content);
+  --color-privacy: var(--nx-privacy);
+  --color-privacy-soft: var(--nx-privacy-soft);
+}
+
+:root,
+[data-theme="light"] {
+  --nx-link: #c2410c;
+  --nx-muted: #4b5563;
+  /* gray-500 reads 4.4:1 on the page background; this reads 4.9:1 */
+  --nx-subtle: #646a76;
+  --nx-sunken: #f9fafb;
+  --nx-accent-line: #fdba74;
+  --nx-ok: #15803d;
+  --nx-ok-soft: #dcfce7;
+  --nx-ok-line: #86efac;
+  --nx-warn: #b45309;
+  --nx-warn-soft: #fef3c7;
+  --nx-warn-line: #fcd34d;
+  --nx-bad: #b91c1c;
+  --nx-bad-soft: #fee2e2;
+  --nx-tip: #111827;
+  --nx-tip-content: #f9fafb;
+  --nx-privacy: #6d28d9;
+  --nx-privacy-soft: #ede9fe;
+}
+
+[data-theme="dark"] {
+  --nx-link: #fb923c;
+  --nx-muted: #d1d5db;
+  --nx-subtle: #9ca3af;
+  --nx-sunken: #111827;
+  --nx-accent-line: rgba(249, 115, 22, 0.5);
+  --nx-ok: #4ade80;
+  --nx-ok-soft: rgba(34, 197, 94, 0.14);
+  --nx-ok-line: rgba(74, 222, 128, 0.45);
+  --nx-warn: #fbbf24;
+  --nx-warn-soft: rgba(245, 158, 11, 0.14);
+  --nx-warn-line: rgba(251, 191, 36, 0.45);
+  --nx-bad: #f87171;
+  --nx-bad-soft: rgba(239, 68, 68, 0.16);
+  --nx-tip: #f9fafb;
+  --nx-tip-content: #111827;
+  --nx-privacy: #c4b5fd;
+  --nx-privacy-soft: rgba(139, 92, 246, 0.18);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-base-100 text-base-content font-sans antialiased;
+    min-height: 100vh;
+    line-height: 1.45;
+    transition: background-color 0.25s, color 0.25s;
+  }
+
+  a {
+    color: var(--color-link);
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+
+  input::placeholder {
+    color: var(--color-subtle);
+  }
+}
+
+@layer components {
+  /* Small uppercase label above a title or a value */
+  .nx-eyebrow {
+    @apply m-0 text-[11px] font-bold uppercase tracking-[0.09em] text-subtle;
+  }
+
+  /* Title row of a card that holds a list: title left, action right */
+  .nx-card-head {
+    @apply flex items-center justify-between gap-3 px-4 pt-4 pb-3 sm:px-[18px];
+  }
+
+  .nx-card-title {
+    @apply m-0 text-sm font-bold text-base-content;
+  }
+
+  /* One line of a list: icon · title and detail · value (the wallet's LIST_ROW) */
+  /* Fixed height, so rows line up across two lists side by side whatever font
+     their text uses (a monospaced id makes a line 2px taller) */
+  .nx-row {
+    @apply grid h-16 grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-3 overflow-hidden border-t border-base-300
+           px-4 py-3 text-base-content sm:h-[66px] sm:grid-cols-[38px_minmax(0,1fr)_auto] sm:px-[18px];
+  }
+
+  a.nx-row:hover {
+    @apply bg-sunken no-underline;
+  }
+
+  .nx-row__title {
+    @apply block truncate font-semibold leading-6;
+  }
+
+  .nx-row__detail {
+    @apply block truncate text-xs leading-[17px] text-subtle;
+  }
+
+  .nx-tile {
+    @apply grid h-9 w-9 shrink-0 place-items-center rounded-[10px] border border-base-300 bg-sunken text-muted
+           sm:h-[38px] sm:w-[38px];
+  }
+
+  /* Rounded label: status, kind, asset type */
+  .nx-chip {
+    @apply inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-base-300 bg-sunken
+           px-2.5 py-0.5 text-xs font-semibold text-muted;
+  }
+
+  .nx-chip--ok {
+    @apply border-transparent bg-ok-soft font-bold text-ok;
+  }
+
+  .nx-chip--warn {
+    @apply border-transparent bg-warn-soft font-bold text-warn;
+  }
+
+  .nx-chip--bad {
+    @apply border-transparent bg-bad-soft font-bold text-bad;
+  }
+
+  .nx-chip--accent {
+    @apply border-accent-line bg-accent text-link;
+  }
+
+  /* Privacy pool activity */
+  .nx-chip--privacy {
+    @apply border-transparent bg-privacy-soft font-bold text-privacy;
+  }
+
+  /* A new asset: a rainbow edge drawn by a gradient behind a padded box */
+  .nx-chip--rainbow {
+    border-color: transparent;
+    background:
+      linear-gradient(var(--color-sunken), var(--color-sunken)) padding-box,
+      linear-gradient(90deg, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #8b5cf6) border-box;
+    color: var(--color-base-content);
+  }
+
+  .nx-dot {
+    @apply inline-block h-[7px] w-[7px] shrink-0 rounded-full bg-current;
+  }
+
+  /* Asset name next to an amount */
+  .nx-asset {
+    @apply inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-base-300 bg-base-200
+           px-2 py-px text-xs font-semibold text-muted no-underline;
+  }
+
+  a.nx-asset:hover {
+    @apply border-accent-line text-link no-underline;
+  }
+
+  /* Box inside a card: one input, one output, one fact */
+  .nx-inset {
+    @apply rounded-[10px] border border-base-300 bg-sunken;
+  }
+
+  .nx-inset--highlight {
+    @apply border-accent-line bg-accent;
+  }
+
+  .nx-icon-btn {
+    @apply inline-grid h-11 w-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-base-300
+           bg-sunken p-0 text-muted transition-colors hover:bg-base-300 hover:text-base-content;
+  }
+
+  /* The wallet's segmented control marks the active item in primary; that
+     orange is a button fill and reads 2.8:1 as text on a dark card */
+  .neurai-segmented__item.is-active,
+  .neurai-segmented__item.is-active:hover {
+    color: var(--color-link);
+  }
+
+  /* Links inside running text need more than colour to stand out */
+  .nx-prose a {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .nx-skeleton {
+    @apply animate-pulse rounded-md bg-base-300;
+  }
+
+  .nx-visually-hidden {
+    @apply absolute h-px w-px overflow-hidden whitespace-nowrap;
+    clip: rect(0 0 0 0);
+  }
+}
+
+/*
+ * Blocks as glass cubes holding a liquid, like mempool.space draws its chain.
+ * The faces are translucent tints of the block's colour, so the card shows
+ * through; the edges carry the colour. Text stays in the page's ink, so it
+ * reads in both themes. The faces are drawn in SVG (ChainStrip.tsx); these
+ * rules give them their colours.
+ *
+ *   green   the next block, still in the mempool (dashed edges, breathing)
+ *   orange  a mined block
+ *   purple  edges and glow: something entered or left a privacy pool
+ *   rainbow edges: an asset was created (set on the element, it is a gradient)
+ */
+:root,
+[data-theme="light"] {
+  --glass-alpha: 1;
+  --glass-gloss: 0.55;
+  --glass-coinbase: rgba(17, 24, 39, 0.55);
+}
+
+[data-theme="dark"] {
+  --glass-alpha: 1.3;
+  --glass-gloss: 0.1;
+  --glass-coinbase: rgba(249, 250, 251, 0.7);
+}
+
+.nx-glass {
+  --glass-rgb: 249 115 22;
+  /* Keep in step with SIZES in ChainStrip.tsx, which counts how many fit */
+  --cube: 88px;
+  position: relative;
+  display: block;
+  width: var(--cube);
+  height: var(--cube);
+  filter: drop-shadow(0 0 5px rgb(var(--glass-glow, var(--glass-rgb)) / 0.4))
+    drop-shadow(0 12px 16px rgb(var(--glass-glow, var(--glass-rgb)) / 0.28));
+  transition: transform 0.2s ease;
+}
+
+@media (min-width: 640px) {
+  .nx-glass {
+    --cube: 136px;
+  }
+}
+
+.nx-glass--pending {
+  --glass-rgb: 16 185 129;
+  animation: nx-breath 2.4s ease-in-out infinite;
+}
+
+.nx-glass--privacy {
+  --glass-glow: 139 92 246;
+  --glass-edge: #8b5cf6;
+}
+
+a:hover > .nx-glass,
+a:focus-visible > .nx-glass {
+  transform: translateY(-4px);
+}
+
+.nx-glass__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.nx-glass__top { fill: rgb(var(--glass-rgb) / calc(0.26 * var(--glass-alpha))); }
+.nx-glass__side { fill: rgb(var(--glass-rgb) / calc(0.16 * var(--glass-alpha))); }
+.nx-glass__frost-a { stop-color: rgb(var(--glass-rgb) / calc(0.14 * var(--glass-alpha))); }
+.nx-glass__frost-b { stop-color: rgb(var(--glass-rgb) / calc(0.03 * var(--glass-alpha))); }
+.nx-glass__gloss { stop-color: #ffffff; stop-opacity: var(--glass-gloss); }
+.nx-glass__gloss-end { stop-color: #ffffff; stop-opacity: 0; }
+.nx-glass__liquid-back { fill: rgb(var(--glass-rgb) / calc(0.1 * var(--glass-alpha))); }
+
+.nx-glass__liquid {
+  fill: rgb(var(--glass-rgb) / calc(0.22 * var(--glass-alpha)));
+  stroke: rgb(var(--glass-rgb) / 0.55);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.nx-glass__edge {
+  fill: none;
+  stroke: var(--glass-edge, rgb(var(--glass-rgb)));
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.nx-glass--pending .nx-glass__edge {
+  stroke-dasharray: 5 4;
+}
+
+/* The front face, where the text and the bubbles go: 124 of 136 units */
+.nx-glass__face {
+  position: absolute;
+  left: 0;
+  top: 8.82%;
+  width: 91.18%;
+  height: 91.18%;
+}
+
+.nx-glass__text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 10%;
+  text-align: center;
+  line-height: 1.25;
+}
+
+.nx-glass__badges {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  gap: 4px;
+}
+
+.nx-glass__badge {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 50%;
+  color: #ffffff;
+}
+
+.nx-glass__badge--asset {
+  background: conic-gradient(#ef4444, #f97316, #eab308, #22c55e, #3b82f6, #8b5cf6, #ef4444);
+}
+
+.nx-glass__badge--privacy {
+  background: #7c3aed;
+}
+
+/* One bubble per transaction, rising from the bottom (also the legend's dots) */
+.nx-glass__face .nx-bubble {
+  position: absolute;
+}
+
+.nx-bubble {
+  border-radius: 50%;
+  box-shadow: inset -1px -1px 0 rgba(0, 0, 0, 0.18), inset 1px 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.nx-bubble--coinbase { background: var(--glass-coinbase); }
+.nx-bubble--payment { background: #f97316; }
+.nx-bubble--asset { background: #eab308; }
+.nx-bubble--privacy { background: #8b5cf6; }
+.nx-bubble--pending { background: #10b981; }
+.nx-bubble--other { background: #9ca3af; }
+
+@keyframes nx-breath {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* A block that just arrived slides in from the mempool side */
+@keyframes nx-cube-in {
+  from { opacity: 0; transform: translateX(-28px) scale(0.94); }
+  to { opacity: 1; transform: none; }
+}
+.nx-cube-enter {
+  animation: nx-cube-in 0.7s ease-out;
+}
+
+/* A new block or row: a short orange glow. Two names so it restarts each time. */
+@keyframes nx-flash-a {
+  from { background-color: var(--color-accent); }
+  to { background-color: transparent; }
+}
+@keyframes nx-flash-b {
+  from { background-color: var(--color-accent); }
+  to { background-color: transparent; }
+}
+.nx-flash-a {
+  animation: nx-flash-a 2.4s ease-out;
+}
+.nx-flash-b {
+  animation: nx-flash-b 2.4s ease-out;
+}
+
+@keyframes nx-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.nx-pulse {
+  animation: nx-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nx-flash-a,
+  .nx-flash-b,
+  .nx-pulse,
+  .nx-skeleton,
+  .nx-cube-enter,
+  .nx-glass--pending {
+    animation: none;
+  }
+
+  * {
+    transition: none !important;
+  }
+}

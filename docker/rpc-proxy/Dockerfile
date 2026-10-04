@@ -23,6 +23,7 @@ RUN git init -q /tmp/src \
  && rm -rf /tmp/src \
  && (npm ci --omit=dev || npm install --omit=dev)
 
+COPY extra-whitelist.js /app/extra-whitelist.js
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 

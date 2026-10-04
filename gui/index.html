@@ -3,18 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Rebel Explorer</title>
+    <title>Rebel Explorer · Neurai</title>
+    <meta name="description" content="Neurai block explorer: blocks, transactions, addresses and assets of the Neurai (XNA) blockchain." />
+    <meta name="theme-color" content="#f4f4f6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/png" href="./logo.png" />
     <link rel="apple-touch-icon" href="./logo.png" />
 
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Rebel Explorer" />
+    <meta property="og:description" content="Blocks, transactions, addresses and assets of the Neurai (XNA) blockchain." />
     <meta property="og:image" content="./preview.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Rebel Explorer" />
+    <meta name="twitter:description" content="Blocks, transactions, addresses and assets of the Neurai (XNA) blockchain." />
     <meta name="twitter:image" content="./preview.png" />
     <!--
       This web app is intentionally simple.
@@ -23,22 +28,29 @@
       Is it pretentious? No.
     -->
     <script>
+      //Apply the theme before the first paint, so the page does not flash:
+      //the user's choice, else the server's default seen last time, else light
       (function () {
-        var saved = localStorage.getItem('theme') || 'light';
-        document.documentElement.setAttribute('data-theme', saved);
+        var theme = null;
+        try {
+          theme = localStorage.getItem("theme");
+          if (theme !== "light" && theme !== "dark") theme = localStorage.getItem("theme-default");
+        } catch (e) {}
+        if (theme !== "light" && theme !== "dark") theme = "light";
+        document.documentElement.setAttribute("data-theme", theme);
       })();
     </script>
-    <link href="./style.css" rel="stylesheet" />
+    <link href="./styles/main.css" rel="stylesheet" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Quicksand:wght@300;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
   </head>
   <body>
     <div id="app"></div>
 
-    <script type="module" src="./index.tsx"></script>
+    <script type="module" src="./main.tsx"></script>
   </body>
 </html>

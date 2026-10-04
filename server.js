@@ -1,15 +1,19 @@
 import express from "express";
 import cors from "cors";
 import path from "path";
+import fs from "fs";
 
 import getConfig from "./getConfig.js";
 import thumbnail from "./thumbnail.js";
-import blockchain from "./blockchain.js";
+import blockchain, { rpcErrorMessage } from "./blockchain.js";
+import * as explorer from "./explorer.js";
 import compression from "compression";
 
 const CONFIG = getConfig();
 const app = express();
 import { getDebugMessage } from "./update.js";
+
+const VERSION = JSON.parse(fs.readFileSync("./package.json", "utf8")).version;
 
 process.on("uncaughtException", (error, origin) => {
   console.log("----- Uncaught exception -----");
@@ -29,6 +33,8 @@ app.use(compression());
 
 //Send human readable JSON
 app.set("json spaces", 4);
+//Satoshis are bigint inside the server; one that slips through still serializes
+app.set("json replacer", (_, value) => (typeof value === "bigint" ? value.toString() : value));
 const port = process.env.PORT || CONFIG.httpPort || 80;
 
 //USE CORS
@@ -41,20 +47,13 @@ app.set("trust proxy", true);
 app.use(express.json());
 
 //STATIC CONTENT
-app.use(express.static("dist"));
-
-//SPA client routes — serve index.html so the React app can resolve the path
-const SPA_ROUTES = [
-  "/block/*",
-  "/blockhash/*",
-  "/tx/*",
-  "/address/*",
-  "/asset/*",
-  "/assets",
-];
-app.get(SPA_ROUTES, (_, res) => {
-  res.sendFile(path.resolve("dist/index.html"));
-});
+//Vite puts a hash in every file name under static/, so they never change.
+//Not "assets/": that path is the page that lists the assets.
+app.use(
+  "/static",
+  express.static("dist/static", { immutable: true, maxAge: "1y", fallthrough: false })
+);
+app.use(express.static("dist", { index: false }));
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
@@ -63,10 +62,23 @@ app.get("/debug", (req, res) => {
   res.send(getDebugMessage());
 });
 
+//Answer with the data, or with {error} and a status that says whose fault it was
+function send(response, promise) {
+  Promise.resolve(promise)
+    .then((data) => response.send(data))
+    .catch((e) => {
+      let status = 500;
+      if (e instanceof explorer.NotFoundError) status = 404;
+      else if (e instanceof explorer.BadRequestError) status = 400;
+      if (status === 500) console.dir(e);
+      response.status(status).send({ error: rpcErrorMessage(e), ...(e && e.extra ? e.extra : {}) });
+    });
+}
+
 //Which chain the node follows, asked in the background so /gui-settings never waits
 let network = null;
 function refreshNetwork() {
-  blockchain
+  explorer
     .getChain()
     .then((chain) => (network = chain))
     .catch(() => {});
@@ -84,15 +96,17 @@ app.get("/gui-settings", (_, response) => {
     ipfs_gateway: CONFIG.ipfs_gateway,
     price_lookup_enabled: CONFIG.price_lookup_enabled !== false,
     network,
+    version: VERSION,
   });
 });
 app.get("/thumbnail", thumbnail);
 
 app.get("/gettype/:value", async function (req, res) {
   try {
-    const type = await blockchain.getType(req.params.value);
+    const value = String(req.params.value || "").trim();
+    const type = await blockchain.getType(value);
     if (type === "UNKNOWN") {
-      const name = await blockchain.findAssetName(req.params.value);
+      const name = await blockchain.findAssetName(value);
       if (name) {
         res.send({ type: "ASSET", name });
         return;
@@ -101,245 +115,104 @@ app.get("/gettype/:value", async function (req, res) {
     res.send({ type });
   } catch (e) {
     console.dir(e);
-    res.status(500).send({ error: "" + e });
+    res.status(500).send({ error: rpcErrorMessage(e) });
   }
 });
 
-app.get("/api/addressdeltas/:address", (request, response) => {
-  const address = request.params.address;
-  const promise = blockchain.getAddressDeltas(address);
+/* ---------------------------------------------------------------------------
+ * Network
+ * ------------------------------------------------------------------------ */
 
-  function ready(r) {
-    //Add human readable amount
-    r.map((item) => (item.amount = item.satoshis / 1e8));
-    response.send(r);
-  }
-  promise.then(ready).catch((e) => {
-    console.dir(e);
-    response.status(400).send({ error: "" + e });
-  });
-});
+app.get("/api/stats", (_, res) => send(res, explorer.getStats()));
+app.get("/api/price", (_, res) => send(res, explorer.getPriceForChain()));
+app.get("/api/mempool", (req, res) => send(res, explorer.getMempool({ limit: req.query.limit })));
+app.get("/api/recent", (_, res) => send(res, explorer.getRecentTransactions()));
+app.get("/api/chain", (req, res) => send(res, explorer.getChainStrip({ count: req.query.count })));
 
-app.get("/api/balancebyaddress/:address", async (req, res) => {
-  const address = req.params.address;
-  try {
-    const balance = await blockchain.getAddressBalance(address);
-    res.send(balance);
-  } catch (e) {
-    console.dir(e);
-    res.status(500).send({ error: "" + e });
-  }
-});
-app.get("/api/mempool", async (_, response) => {
-  try {
-    const mempool = await blockchain.getRawMempool();
-    response.send(mempool);
-  } catch (e) {
-    console.dir(e);
-    response.status(500).send({ error: "" + e });
-  }
-});
-app.get("/memory", function (_, response) {
-  const m = process.memoryUsage();
-  response.send(m);
-});
-app.get("/api/getaddressutxos/:address", (request, response) => {
-  const address = request.params.address;
-  const promise = blockchain.getAddressUTXOs(address);
-  promise
-    .then((data) => {
-      response.send(data);
-    })
-    .catch((e) => {
-      response.status(500).send({ error: "Technical error" });
-    });
-});
-app.get("/api/blocks/:blockHash", (req, res) => {
-  const hash = req.params.blockHash;
+/* ---------------------------------------------------------------------------
+ * Blocks
+ * ------------------------------------------------------------------------ */
 
-  //Is it hash or height?
-  let promise = null;
-  if (hash.length > 15) {
-    promise = blockchain.getBlock(hash);
-  } else {
-    promise = blockchain.getBlockByHeight(parseInt(hash));
-  }
-
-  promise
-    .then((data) => {
-      return res.send(data);
-    })
-    .catch((e) => {
-      console.log("server in promise catch");
-      console.dir(e);
-      res.status(500).send({
-        error: "Technical error",
-      });
-      /* res.sendStatus(500).send({
-        error: e + "",
-      });*/
-    });
-});
+app.get("/api/blocks", (req, res) =>
+  send(res, explorer.getBlockList({ count: req.query.count, before: req.query.before }))
+);
+app.get("/api/blocks/:id", (req, res) => send(res, explorer.getBlockDetail(req.params.id)));
+app.get("/api/blocks/:id/txs", (req, res) =>
+  send(res, explorer.getBlockTransactions(req.params.id, { page: req.query.page, size: req.query.size }))
+);
 app.get("/api/blockheader/:height", async (req, res) => {
   const height = Number(req.params.height);
   if (!Number.isSafeInteger(height) || height < 0) {
     res.status(400).send({ error: "Height must be a non negative integer" });
     return;
   }
-  try {
-    const header = await blockchain.getBlockHeaderByHeight(height);
-    res.send(header);
-  } catch (e) {
-    console.dir(e);
-    res.status(500).send({ error: "" + e });
-  }
+  send(res, blockchain.getBlockHeaderByHeight(height));
 });
-app.get("/api/blocks", async (req, res) => {
-  try {
-    let hash = await blockchain.getBestBlockHash();
+app.get("/api/bestblock", (_, res) => send(res, explorer.getTip()));
 
-    const blocks = [];
+/* ---------------------------------------------------------------------------
+ * Transactions
+ * ------------------------------------------------------------------------ */
 
-    //Stop at the genesis block, it has no previousblockhash
-    for (let i = 0; i < 10 && hash; i++) {
-      let block = await blockchain.getBlock(hash);
+app.get("/api/transactions/:id", (req, res) => send(res, explorer.getTransactionDetail(req.params.id)));
 
-      blocks.push(block);
-      hash = block.previousblockhash;
-    }
-    res.send(blocks);
-  } catch (e) {
-    console.dir(e);
-    res.status(500).send({ error: "" + e });
-  }
-});
+/* ---------------------------------------------------------------------------
+ * Addresses
+ * ------------------------------------------------------------------------ */
 
-app.get("/api/assetaddresses/:name", async (req, res) => {
-  const name = "" + req.params.name;
-  try {
-    const holdersObj = await blockchain.getAddressesByAsset(name);
-    const holders = Object.entries(holdersObj || {}).map(([address, amount]) => ({
-      address,
-      amount,
-    }));
-    //Amounts can be decimal strings when a number would lose precision
-    holders.sort((a, b) => Number(b.amount) - Number(a.amount));
-
-    let ownerAddress = null;
-    let ownerAmount = null;
-    if (!name.endsWith("!")) {
-      try {
-        const ownerObj = await blockchain.getAddressesByAsset(name + "!");
-        const entries = Object.entries(ownerObj || {});
-        if (entries.length) {
-          ownerAddress = entries[0][0];
-          ownerAmount = entries[0][1];
-        }
-      } catch (_) {}
-    }
-    res.send({ ownerAddress, ownerAmount, holders });
-  } catch (e) {
-    console.dir(e);
-    res.status(500).send({ error: "" + e });
-  }
-});
-
-//The proxy refuses listaddressesbyasset with onlytotal, count here instead
-app.get("/api/assetholdercount/:name", async (req, res) => {
-  const name = "" + req.params.name;
-  try {
-    const holders = await blockchain.getAddressesByAsset(name);
-    res.send({ count: Object.keys(holders || {}).length });
-  } catch (e) {
-    console.dir(e);
-    res.status(500).send({ error: "" + e });
-  }
-});
-
-app.get("/api/assetdata/:name", (request, response) => {
-  const name = "" + request.params.name;
-
-  blockchain
-    .getAssetData(name)
-    .then((data) => response.send(data))
-    .catch((e) => response.status(500).send({ error: "" + e }));
-});
-app.get("/api/assets", (request, response) => {
-  const promise = blockchain.getAssets();
-  promise
-    .then((assets) => response.send(assets))
-    .catch((e) => {
-      response.status(500).send({ error: "" + e });
-    });
-});
-
-app.get("/api/transactions/:id", async (request, response) => {
-  const id = "" + request.params.id;
-  blockchain
-    .getTransaction(id)
-    .then((data) => {
-      response.send(data);
-      return;
+app.get("/api/addresses/:address", (req, res) => send(res, explorer.getAddressSummary(req.params.address)));
+app.get("/api/addresses/:address/history", (req, res) =>
+  send(
+    res,
+    explorer.getAddressHistory(req.params.address, {
+      page: req.query.page,
+      size: req.query.size,
+      filter: req.query.filter,
     })
-    .catch((e) => {
-      response.status(500).send({
-        error: "" + e,
-      });
-      return;
-    });
-});
-app.get("/api/bestblock", async (request, response) => {
-  try {
-    const hash = await blockchain.getBestBlockHash();
-    const block = await blockchain.getBlock(hash);
-    response.send(block);
-  } catch (e) {
-    console.dir(e);
-    response.status(500).send({ error: "" + e });
-  }
-});
+  )
+);
+app.get("/api/addresses/:address/utxos", (req, res) =>
+  send(res, explorer.getAddressUtxos(req.params.address, { page: req.query.page, size: req.query.size }))
+);
+//Raw node answers, linked from the GUI for people who want everything
+app.get("/api/addressdeltas/:address", (req, res) => send(res, blockchain.getAddressDeltas(req.params.address)));
+app.get("/api/getaddressutxos/:address", (req, res) => send(res, blockchain.getAddressUTXOs(req.params.address)));
 
-app.get("/api/addresses/:address", (request, response) => {
-  blockchain
-    .getAddressBalance(request.params.address)
-    .then((data) => response.send(data))
-    .catch((error) => {
-      response.status(500).send({
-        error: "" + error,
-      });
-    });
-});
+/* ---------------------------------------------------------------------------
+ * Assets
+ * ------------------------------------------------------------------------ */
 
-app.get("/gettxoutsetinfo", function (request, response) {
-  blockchain
-    .getCoinsInCirculation()
-    .then((data) => response.send(data))
-    .catch((e) => {
-      response.status(500).send({
-        error: "Server side error",
-      });
-    });
+app.get("/api/assets", (req, res) =>
+  send(
+    res,
+    explorer.getAssetList({
+      page: req.query.page,
+      size: req.query.size,
+      q: req.query.q,
+      type: req.query.type,
+      sort: req.query.sort,
+    })
+  )
+);
+app.get("/api/assets/:name", (req, res) => send(res, explorer.getAssetDetail(req.params.name)));
+app.get("/api/assets/:name/holders", (req, res) =>
+  send(res, explorer.getAssetHolders(req.params.name, { page: req.query.page, size: req.query.size }))
+);
+app.get("/api/assetdata/:name", (req, res) => send(res, blockchain.getAssetData("" + req.params.name)));
+
+app.get("/memory", function (_, response) {
+  const m = process.memoryUsage();
+  response.send(m);
 });
 
-app.get("/api/getassetdata", (request, response) => {
-  const assetName = request.query.name;
+//Unknown API paths answer JSON, everything else is a page of the app
+app.all("/api/*", (_, res) => res.status(404).send({ error: "Unknown API endpoint" }));
 
-  if (!assetName) {
-    response.status(400).send({
-      error:
-        "Query parameter name is mandatory, cant lookup an asset without a name",
-    });
+//SPA client routes: index.html lets the React app resolve the path itself
+app.get("*", (req, res) => {
+  if (path.extname(req.path)) {
+    res.status(404).end();
     return;
   }
-  blockchain
-    .getAssetData(assetName)
-    .then((data) => {
-      response.send(data);
-    })
-    .catch((e) => {
-      console.dir(e);
-      response.status(500).send({
-        error: "Something went wrong",
-      });
-    });
+  res.sendFile(path.resolve("dist/index.html"));
 });

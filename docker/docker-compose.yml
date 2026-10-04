@@ -98,12 +98,20 @@ services:
       NEURAI_NODE_URL: "http://neuraid:19101"
       NEURAI_RPC_USER: "${NODE_RPC_USER:-neurai}"
       NEURAI_RPC_PASSWORD: "${NODE_RPC_PASSWORD:-changeme}"
+      # Read-only methods the public proxy leaves out because they are slow.
+      # gettxoutsetinfo gives the explorer the coins that exist; it scans the
+      # whole UTXO set, and the proxy runs it at most once per block (cached).
+      # Only the names allowed in rpc-proxy/extra-whitelist.js are accepted.
+      PROXY_EXTRA_METHODS: "gettxoutsetinfo"
 
     expose:
       - "19999"
 
     ports:
-      - "19999:19999"
+      # Loopback only: the explorer reaches the proxy over neurai_net, and with
+      # extra methods on it this proxy should not be open to the internet.
+      # Publish it as "19999:19999" again to offer a public RPC.
+      - "127.0.0.1:19999:19999"
 
     networks:
       - neurai_net

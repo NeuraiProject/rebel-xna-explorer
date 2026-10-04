@@ -2,6 +2,7 @@ dist
 node_modules
 config.json
 .parcel-cache
+tmp/
 
 # Logs
 logs

@@ -30,4 +30,5 @@ cat > /app/config.json <<EOF
 EOF
 
 echo "[entrypoint] config.json generated, starting rpc-proxy on port ${PROXY_LOCAL_PORT}"
-exec npm start
+# extra-whitelist.js adds PROXY_EXTRA_METHODS to the proxy's whitelist first
+exec node --no-deprecation -r /app/extra-whitelist.js index

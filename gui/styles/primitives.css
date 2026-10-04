@@ -1,0 +1,312 @@
+/*
+ * Copied from neurai-webwallet (src/styles/primitives.css). Keep the two in
+ * step: change it in the wallet first, then copy it here unchanged.
+ */
+
+@reference "./tailwind.css";
+
+/*
+ * Neurai design primitives — built on top of DaisyUI v5 / Tailwind v4.
+ *
+ * Each `.neurai-*` class is a thin alias that wraps the DaisyUI/Tailwind
+ * vocabulary the wallet actually uses, so JSX stays readable and component
+ * styles change in one place if we ever swap the underlying library.
+ *
+ * Use these classes in JSX. Avoid mixing them with raw Pico-styled HTML
+ * elements (`<article>`, `<button>` with no class, etc.) — those are the
+ * patterns we are migrating away from.
+ */
+
+@layer components {
+  /* -----------------------------------------------------------------------
+   * Layout
+   * --------------------------------------------------------------------- */
+
+  /* Outer container for a full screen / route */
+  .neurai-page {
+    @apply container mx-auto max-w-7xl px-4 py-6 md:px-6;
+  }
+
+  /* Vertical stack with consistent gap; default spacing fits Pico's old
+     `.grid` rhythm so swap-ins look natural. */
+  .neurai-stack {
+    @apply flex flex-col gap-4;
+  }
+
+  /* -----------------------------------------------------------------------
+   * Card surfaces
+   * --------------------------------------------------------------------- */
+
+  /* Standard wallet card. Layered shadow (contact + ambient + hero) so the
+     card edges stand out clearly against the gray page background. */
+  .neurai-card {
+    @apply rounded-xl border border-base-300 bg-base-200 px-7 py-6;
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.12),
+      0 4px 8px rgba(0, 0, 0, 0.10),
+      0 16px 32px -8px rgba(0, 0, 0, 0.18);
+  }
+
+  [data-theme="dark"] .neurai-card {
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.5),
+      0 8px 24px -4px rgba(0, 0, 0, 0.55);
+  }
+
+  /* Shared dialog frame: a subtle light edge on dark surfaces. */
+  [data-theme="dark"] .modal-box.neurai-card {
+    border-color: rgba(255, 255, 255, 0.22);
+  }
+
+  /* Compact card — used by the navigator / login menu strip. */
+  .neurai-card--compact {
+    @apply px-4 py-3;
+  }
+
+  /* Accent card — peach background in light, tinted in dark. */
+  .neurai-card--accent {
+    @apply bg-accent border-primary/30;
+  }
+
+  /* Tiny eyebrow label that sits above titles ("CLAIM", "FAUCET BALANCE", etc.). */
+  .neurai-eyebrow {
+    @apply mb-2 text-xs font-bold uppercase tracking-widest text-base-content/55;
+  }
+
+  /* Internal section title inside a card (replaces small `<h5>` headers). */
+  .neurai-card__title {
+    @apply m-0 text-lg font-semibold text-base-content;
+  }
+
+  /* -----------------------------------------------------------------------
+   * Buttons
+   * --------------------------------------------------------------------- */
+
+  .neurai-btn {
+    @apply btn;
+  }
+
+  .neurai-btn--primary {
+    @apply btn btn-primary;
+  }
+
+  .neurai-btn--secondary {
+    @apply btn btn-ghost border border-base-300;
+  }
+
+  .neurai-btn--ghost {
+    @apply btn btn-ghost;
+  }
+
+  /* Small square icon button (used for help/settings/copy controls). */
+  .neurai-btn--icon {
+    @apply btn btn-ghost btn-square btn-sm;
+  }
+
+  /* -----------------------------------------------------------------------
+   * Form controls
+   * --------------------------------------------------------------------- */
+
+  .neurai-input {
+    @apply input w-full;
+  }
+
+  .neurai-select {
+    @apply select w-full;
+  }
+
+  .neurai-textarea {
+    @apply textarea w-full;
+  }
+
+  .neurai-label {
+    @apply mb-1 block text-sm font-semibold text-base-content;
+  }
+
+  .neurai-hint {
+    @apply mt-1 text-xs text-base-content/70;
+  }
+
+  .neurai-hint--warn {
+    @apply mt-1 rounded-md bg-warning/15 px-2 py-1 text-xs font-medium text-warning;
+  }
+
+  /* -----------------------------------------------------------------------
+   * Choice tiles
+   *
+   * Radio cards for short, mutually exclusive lists where each option needs a
+   * line of explanation — a plain `<select>` has nowhere to put that. Each tile
+   * wraps a visually hidden radio input, so grouping, arrow keys and screen
+   * reader announcements stay native; the tile only draws the state.
+   * --------------------------------------------------------------------- */
+
+  /* Callers set the column count (e.g. `grid-cols-1 sm:grid-cols-3`). */
+  .neurai-choice-grid {
+    @apply grid gap-2;
+  }
+
+  .neurai-choice {
+    @apply flex min-w-0 cursor-pointer select-none items-stretch gap-2.5 rounded-lg
+           border border-base-300 bg-base-100 px-3 py-2.5 transition-colors;
+  }
+
+  .neurai-choice:hover {
+    @apply border-primary/45 bg-primary/5;
+  }
+
+  .neurai-choice:has(:focus-visible) {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
+
+  .neurai-choice.is-selected {
+    @apply border-primary bg-primary/10;
+  }
+
+  /* Visible but out of reach: the option exists, this network cannot use it. */
+  .neurai-choice.is-disabled {
+    @apply pointer-events-none border-dashed opacity-60;
+  }
+
+  /* The radio mark: hollow when unselected, filled when selected. */
+  .neurai-choice__mark {
+    @apply mt-0.5 h-4 w-4 shrink-0 rounded-full border-2 border-base-content/30 transition-colors;
+  }
+
+  .neurai-choice.is-selected .neurai-choice__mark {
+    @apply border-primary bg-primary;
+  }
+
+  .neurai-choice__body {
+    @apply flex min-w-0 flex-1 flex-col gap-1.5;
+  }
+
+  .neurai-choice__name {
+    @apply text-sm font-semibold leading-none text-base-content;
+  }
+
+  .neurai-choice__desc {
+    @apply text-xs leading-snug text-base-content/65;
+  }
+
+  /* Sample address: big enough to read at a glance, with the part that
+     identifies the family carrying the weight. `self-start` keeps the chip as
+     wide as its content, `max-w-full` + `truncate` cut the tail when a long
+     bech32m address does not fit. `leading-5` leaves room for descenders,
+     which `truncate`'s hidden overflow would otherwise clip. */
+  .neurai-choice__address {
+    @apply max-w-full self-start truncate rounded bg-base-content/10 px-2 py-1
+           font-mono text-sm leading-5 text-base-content/50;
+  }
+
+  .neurai-choice__prefix {
+    @apply font-bold tracking-tight text-base-content;
+  }
+
+  /* -----------------------------------------------------------------------
+   * Choice dropdown — one tile in view, the rest a click away
+   *
+   * The panel is positioned rather than in flow, so opening it does not push
+   * the form down. Nothing between here and the card clips overflow.
+   * --------------------------------------------------------------------- */
+
+  .neurai-dropdown {
+    @apply relative;
+  }
+
+  .neurai-dropdown__panel {
+    @apply absolute inset-x-0 top-0 z-20 rounded-lg border border-base-300
+           bg-base-200 p-1.5;
+    box-shadow:
+      0 4px 8px rgba(0, 0, 0, 0.10),
+      0 16px 32px -8px rgba(0, 0, 0, 0.22);
+  }
+
+  [data-theme="dark"] .neurai-dropdown__panel {
+    box-shadow: 0 8px 28px -4px rgba(0, 0, 0, 0.7);
+  }
+
+  /* The tile that opens the panel: a chevron takes the radio mark's place. */
+  .neurai-choice--trigger {
+    @apply w-full text-left;
+  }
+
+  .neurai-choice__chevron {
+    @apply ml-auto h-5 w-5 shrink-0 self-center text-base-content/45 transition-transform;
+  }
+
+  .neurai-choice--trigger[aria-expanded="true"] .neurai-choice__chevron {
+    @apply rotate-180;
+  }
+
+  /* Why an option is out of reach, e.g. "soon". */
+  .neurai-choice__badge {
+    @apply rounded-full bg-base-300 px-1.5 py-0.5 text-[10px] font-bold uppercase
+           tracking-wider text-base-content/55;
+  }
+
+  /* -----------------------------------------------------------------------
+   * Segmented control — a handful of modes, one of them active
+   *
+   * Lighter than a row of buttons on purpose: these pick what the form shows,
+   * so they must not carry the same weight as the button that submits it.
+   * --------------------------------------------------------------------- */
+
+  .neurai-segmented {
+    @apply flex w-full gap-1 rounded-lg border border-base-300 bg-base-100 p-1;
+  }
+
+  .neurai-segmented__item {
+    @apply flex-1 rounded-md px-3 py-2 text-sm font-semibold text-base-content/65
+           transition-colors;
+  }
+
+  .neurai-segmented__item:hover {
+    @apply bg-base-content/5 text-base-content;
+  }
+
+  .neurai-segmented__item.is-active,
+  .neurai-segmented__item.is-active:hover {
+    @apply bg-base-200 text-primary;
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.10),
+      0 2px 4px rgba(0, 0, 0, 0.06);
+  }
+
+  [data-theme="dark"] .neurai-segmented__item.is-active,
+  [data-theme="dark"] .neurai-segmented__item.is-active:hover {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+  }
+
+  .neurai-segmented--sm .neurai-segmented__item {
+    @apply py-1.5 text-xs;
+  }
+
+  /* -----------------------------------------------------------------------
+   * Misc
+   * --------------------------------------------------------------------- */
+
+  .neurai-divider {
+    @apply my-3 border-t border-base-300;
+  }
+
+  /* Status dot (sync, passphrase, hardware) — color set via `.is-*` modifier. */
+  .neurai-status {
+    @apply inline-flex items-center gap-1.5 text-xs text-base-content/80;
+  }
+
+  .neurai-status__dot {
+    @apply inline-block h-2.5 w-2.5 rounded-full bg-base-content/40;
+  }
+
+  .neurai-status.is-ok .neurai-status__dot {
+    @apply bg-success;
+  }
+
+  .neurai-status.is-warn .neurai-status__dot {
+    @apply bg-warning;
+  }
+
+  .neurai-status.is-error .neurai-status__dot {
+    @apply bg-error;
+  }
+}

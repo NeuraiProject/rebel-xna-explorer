@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+/*
+ * Copied from neurai-webwallet (src/styles/tailwind.css) so the explorer and
+ * the wallet share one look. Keep the two in step.
+ *
+ * One deliberate difference: `primary` is orange-700 instead of orange-500.
+ * The wallet's #f97316 under white text reads at 2.8:1; #c2410c reads at
+ * 5.2:1. The brighter orange stays for marks and accents as `brand`
+ * (see explorer.css).
+ *
+ * Second difference: DaisyUI's built-in themes are switched off. Since
+ * DaisyUI 5.7 the built-in `light` is emitted under a more specific selector
+ * than a custom theme of the same name, so it won and the page turned purple.
+ * The two custom themes below already say which is the default and which
+ * follows a dark system preference.
+ */
+@plugin "daisyui" {
+  themes: false;
+}
+
+/*
+ * Custom DaisyUI themes — Neurai palette ported from the faucet design.
+ * Themes are named `light` / `dark` so the explorer's
+ * `<html data-theme="light|dark">` mechanism keeps working without changes.
+ */
+@plugin "daisyui/theme" {
+  name: "light";
+  default: true;
+  prefersdark: false;
+  color-scheme: "light";
+
+  --color-base-100: #f4f4f6;       /* page bg */
+  --color-base-200: #ffffff;       /* card / surface */
+  --color-base-300: #e5e7eb;       /* border / divider */
+  --color-base-content: #111827;   /* primary text */
+
+  --color-primary: #c2410c;        /* orange-700, see above */
+  --color-primary-content: #ffffff;
+  --color-secondary: #9a3412;      /* orange-800, hover */
+  --color-secondary-content: #ffffff;
+  --color-accent: #fff7ed;         /* orange-50 — accent surface */
+  --color-accent-content: #c2410c;
+  --color-neutral: #111827;
+  --color-neutral-content: #ffffff;
+
+  --color-info: #38bdf8;
+  --color-info-content: #082f49;
+  --color-success: #22c55e;
+  --color-success-content: #052e16;
+  --color-warning: #f59e0b;
+  --color-warning-content: #2a1a00;
+  --color-error: #ef4444;
+  --color-error-content: #ffffff;
+
+  --radius-box: 0.75rem;    /* card radius (12px) */
+  --radius-field: 0.625rem; /* input radius (10px) */
+  --radius-selector: 0.5rem;
+}
+
+@plugin "daisyui/theme" {
+  name: "dark";
+  default: false;
+  prefersdark: true;
+  color-scheme: "dark";
+
+  --color-base-100: #111827;       /* page bg */
+  --color-base-200: #1f2937;       /* card */
+  --color-base-300: #374151;       /* border */
+  --color-base-content: #f9fafb;
+
+  --color-primary: #c2410c;
+  --color-primary-content: #ffffff;
+  --color-secondary: #9a3412;
+  --color-secondary-content: #ffffff;
+  --color-accent: rgba(249, 115, 22, 0.12);
+  --color-accent-content: #fb923c;
+  --color-neutral: #1f2937;
+  --color-neutral-content: #f9fafb;
+
+  --color-info: #38bdf8;
+  --color-info-content: #082f49;
+  --color-success: #22c55e;
+  --color-success-content: #052e16;
+  --color-warning: #f59e0b;
+  --color-warning-content: #2a1a00;
+  --color-error: #ef4444;
+  --color-error-content: #ffffff;
+
+  --radius-box: 0.75rem;
+  --radius-field: 0.625rem;
+  --radius-selector: 0.5rem;
+}
+
+@source "../index.html";
+@source "../**/*.{ts,tsx}";

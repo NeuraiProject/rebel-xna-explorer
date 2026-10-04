@@ -62,8 +62,8 @@ deep-links can be shared and bookmarked.
 | `/asset/:name`        | Asset detail and holders                     | `/asset/SWAP`                                                         |
 
 Notes:
-- The search bar accepts a block height, block hash, transaction id or
-  address; it routes to the matching URL automatically.
+- The search bar accepts a block height, block hash, transaction id, address
+  or asset name (in any case); it routes to the matching URL automatically.
 - In-app links to a block prefer `/block/:height` when the height is known
   and fall back to `/blockhash/:hash` otherwise.
 - Asset names are URL-encoded, so names containing `/` or `#` work.
@@ -87,6 +87,20 @@ services wired together on an internal network:
 
 Flow: browser → `explorer:8888` → `rpc-proxy:19999` → `neuraid:19101`.
 
+What each image is built from:
+
+- `explorer`: this checkout (build context is the repo root), so local
+  changes are what runs. Dependencies come from `package-lock.json` (`npm ci`).
+- `neuraid`: branch `DePIN-Test` of NeuraiProject/Neurai at the pinned
+  `NODE_SOURCE_COMMIT`.
+- `rpc-proxy`: NeuraiProject/neurai-rpc-proxy at the pinned
+  `PROXY_SOURCE_COMMIT`.
+
+The node and the proxy are pinned on purpose: Docker caches the layer that
+fetches the sources, so following a branch would keep whatever commit the
+first build saw. To update them, change the commit in `docker/.env` and run
+`docker compose up -d --build`.
+
 ### Requirements
 - Docker and Docker Compose v2 (`docker compose`).
 - Enough disk space for the Neurai data directory (stored in the
@@ -98,6 +112,7 @@ From the project root:
 
 ```bash
 cd docker
+cp .env.example .env   # then set NODE_RPC_PASSWORD
 docker compose up -d --build
 ```
 
@@ -107,10 +122,13 @@ The first build takes a while because `neuraid` is compiled from source
 Once the `neuraid` healthcheck passes, the proxy and the explorer will start
 automatically.
 
-- Explorer UI: http://localhost:8888
-- RPC proxy:   http://127.0.0.1:19999/rpc (bound to localhost only)
+- Explorer UI: http://localhost:8888 (published on all interfaces)
+- RPC proxy:   http://localhost:19999/rpc (published on all interfaces; it
+  only forwards whitelisted methods)
 - Node P2P:    port `19100` (testnet)
-- Node RPC:    port `19101` (exposed for local use)
+- Node RPC:    http://127.0.0.1:19101 (host loopback only; the proxy reaches
+  the node over the Docker network). Do not publish it on `0.0.0.0`: Docker
+  bypasses host firewalls such as ufw, and this is the node's full RPC.
 
 ### Configuration via environment variables
 
@@ -138,11 +156,19 @@ edit the images.
 `NEURAI_ASSETINDEX`, `NEURAI_ADDRESSINDEX`, …), and `NEURAI_DATADIR`.
 
 **RPC proxy** (`rpc-proxy` service): `PROXY_CONCURRENCY`, `PROXY_LOCAL_PORT`,
-`NEURAI_NODE_URL`, `NEURAI_RPC_USER`, `NEURAI_RPC_PASSWORD`.
+`NEURAI_EXPECTED_GENESIS` (required: the proxy only routes to a node whose
+block 0 has this hash), `NEURAI_NODE_URL`, `NEURAI_RPC_USER`,
+`NEURAI_RPC_PASSWORD`.
+
+**Shared values** (`docker/.env`, see `docker/.env.example`): `NODE_RPC_USER`
+and `NODE_RPC_PASSWORD` (used by both the node and the proxy),
+`NODE_SOURCE_COMMIT` and `PROXY_SOURCE_COMMIT` (pinned sources).
 
 To switch to **Mainnet**, set `NEURAI_TESTNET=0` on `neuraid`, point
 `EXPLORER_NEURAI_URL` to the mainnet RPC, adjust ports (`19001/19000` for
-mainnet) and update `EXPLORER_HEADLINE`.
+mainnet), set `NEURAI_EXPECTED_GENESIS` to the mainnet genesis
+`00000044d33c0c0ba019be5c0249730424a69cb4c222153322f68c6104484806` and update
+`EXPLORER_HEADLINE`. The network label in the header comes from the node.
 
 ### Common operations
 

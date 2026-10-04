@@ -1,12 +1,16 @@
 import * as React from "react";
+import axios from "axios";
 import { Loading, Table } from "../components";
 import { useFetch } from "../useFetch";
 import { getHistory } from "@neuraiproject/neurai-history-list";
 import { formatAmount } from "../amount";
 export function History({ address }: { address: string | null }) {
-  const URL = "/api/addressdeltas/" + address;
+  const URL = "/api/addressdeltas/" + encodeURIComponent("" + address);
 
-  const _deltas = useFetch(URL);
+  const { data: _deltas, error } = useFetch(URL);
+  if (error) {
+    return <div>Could not load history: {error}</div>;
+  }
   if (!_deltas) {
     return (
       <div>
@@ -79,11 +83,35 @@ export function History({ address }: { address: string | null }) {
   );
 }
 
-function Time({ height }) {
-  const block = useFetch("/api/blocks/" + height);
+//Rows often share a block: ask once per height, and only for the header
+const blockTimeCache: { [height: number]: Promise<number> } = {};
+function getBlockTime(height: number): Promise<number> {
+  if (!blockTimeCache[height]) {
+    blockTimeCache[height] = axios
+      .get("/api/blockheader/" + height)
+      .then((response) => response.data.time);
+    blockTimeCache[height].catch(() => delete blockTimeCache[height]);
+  }
+  return blockTimeCache[height];
+}
 
-  if (!block) {
+function Time({ height }: { height: number }) {
+  const [time, setTime] = React.useState<number | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    getBlockTime(height)
+      .then((t) => {
+        if (!cancelled) setTime(t);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [height]);
+
+  if (time === null) {
     return null;
   }
-  return <div>{new Date(1000 * block.time).toLocaleString()}</div>;
+  return <div>{new Date(1000 * time).toLocaleString()}</div>;
 }

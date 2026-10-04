@@ -2,7 +2,6 @@ dist
 node_modules
 config.json
 .parcel-cache
-package-lock.json
 
 # Logs
 logs

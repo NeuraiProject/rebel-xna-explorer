@@ -2,6 +2,8 @@
 FROM node:lts-slim
 
 ARG REPO_URL=https://github.com/NeuraiProject/neurai-rpc-proxy.git
+# A branch, a tag or a full commit hash. Pin a commit: Docker caches this layer,
+# so a branch is only fetched once and later commits never reach the image.
 ARG REPO_REF=master
 
 ENV NODE_ENV=production
@@ -13,7 +15,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-RUN git clone --depth 1 --branch "${REPO_REF}" "${REPO_URL}" /tmp/src \
+RUN git init -q /tmp/src \
+ && git -C /tmp/src fetch -q --depth 1 "${REPO_URL}" "${REPO_REF}" \
+ && git -C /tmp/src checkout -q --detach FETCH_HEAD \
+ && rm -rf /tmp/src/.git \
  && cp -a /tmp/src/. /app/ \
  && rm -rf /tmp/src \
  && (npm ci --omit=dev || npm install --omit=dev)

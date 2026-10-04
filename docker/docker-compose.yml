@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
       args:
         BRANCH: DePIN-Test
+        # Pinned so rebuilds are reproducible; it must match NEURAI_EXPECTED_GENESIS below.
+        SOURCE_COMMIT: "${NODE_SOURCE_COMMIT:-e64965d7311ff51d0f3a9a3a48d8e75992122b5c}"
     container_name: neurai-testnet-node
     restart: unless-stopped
 
@@ -22,9 +24,12 @@ services:
       NEURAI_REST: "1"
 
       # ── RPC ──────────────────────────────────────────────────────────────
-      NEURAI_RPC_USER: "neurai"
-      NEURAI_RPC_PASSWORD: "changeme"
-      # NEURAI_RPC_ALLOW_IP: restrict in production (e.g. 127.0.0.1/32)
+      # User/password come from .env (copy .env.example) and are shared with
+      # the rpc-proxy, so both always agree.
+      NEURAI_RPC_USER: "${NODE_RPC_USER:-neurai}"
+      NEURAI_RPC_PASSWORD: "${NODE_RPC_PASSWORD:-changeme}"
+      # Any IP may connect, but the RPC port is only published on the host's
+      # loopback (see ports): only the proxy and the host itself reach it.
       NEURAI_RPC_ALLOW_IP: "0.0.0.0/0"
       NEURAI_RPC_PORT: "19101"
       NEURAI_RPC_TIMEOUT: "240"
@@ -51,7 +56,9 @@ services:
 
     ports:
       - "19100:19100"   # testnet P2P
-      - "19101:19101"   # testnet RPC
+      # Loopback only: Docker bypasses host firewalls such as ufw, so
+      # publishing it on 0.0.0.0 would open the full node RPC to the internet.
+      - "127.0.0.1:19101:19101"   # testnet RPC
 
     networks:
       - neurai_net
@@ -69,7 +76,8 @@ services:
       dockerfile: Dockerfile
       args:
         REPO_URL: https://github.com/NeuraiProject/neurai-rpc-proxy.git
-        REPO_REF: master
+        # Pinned commit; bump it to update the proxy (a branch would stay cached).
+        REPO_REF: "${PROXY_SOURCE_COMMIT:-423a177dd62fcb7f5e2f4f2d1de8168eabe79110}"
     container_name: neurai-testnet-rpc-proxy
     restart: unless-stopped
 
@@ -84,11 +92,12 @@ services:
       PROXY_ENVIRONMENT: "Neurai Testnet"
       PROXY_ENDPOINT: "http://rpc-proxy:19999/rpc"
       PROXY_LOCAL_PORT: "19999"
+      # Testnet genesis of the DePIN-Test branch; the proxy refuses to start without it.
+      NEURAI_EXPECTED_GENESIS: "0000008b384aeffecdab182575dc4e86c9f07f90318c65088532660ed9a8a021"
       NEURAI_NODE_NAME: "neuraid-testnet"
       NEURAI_NODE_URL: "http://neuraid:19101"
-      NEURAI_RPC_USER: "neurai"
-      NEURAI_RPC_PASSWORD: "changeme"
-      NEURAI_DEPIN_ENABLED: "false"
+      NEURAI_RPC_USER: "${NODE_RPC_USER:-neurai}"
+      NEURAI_RPC_PASSWORD: "${NODE_RPC_PASSWORD:-changeme}"
 
     expose:
       - "19999"
@@ -105,11 +114,9 @@ services:
 
   explorer:
     build:
-      context: ./explorer-rpc
-      dockerfile: Dockerfile
-      args:
-        REPO_URL: https://github.com/NeuraiProject/rebel-xna-explorer.git
-        REPO_REF: master
+      # Built from this checkout, so local changes are what runs.
+      context: ..
+      dockerfile: docker/explorer-rpc/Dockerfile
     container_name: neurai-testnet-explorer
     restart: unless-stopped
 

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Table } from "../components";
-import { getTwoDecimalTrunc } from "./Address";
+import { formatRawSatoshis, rawSatoshis } from "../amount";
 
 export function AssetTable({ assets }) {
   return (
@@ -12,16 +12,14 @@ export function AssetTable({ assets }) {
       <Table.Body>
         {assets.map((asset) => {
           const name = asset.assetName;
-          const balance = Number(asset.balance) / 100000000;
 
-          if (balance === 0) {
+          if (rawSatoshis(asset.balance) === 0n) {
             return null;
           }
-          const displayBalance = getTwoDecimalTrunc(balance).toLocaleString();
           return (
             <Table.Row key={name}>
               <Table.Cell>{name}</Table.Cell>
-              <Table.Cell>{displayBalance}</Table.Cell>
+              <Table.Cell>{formatRawSatoshis(asset.balance)}</Table.Cell>
             </Table.Row>
           );
         })}

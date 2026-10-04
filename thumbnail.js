@@ -46,7 +46,11 @@ if (!fs.existsSync(dir)) {
   fs.mkdirSync(dir);
 }
 
-//Download the image and scale it down, keeping the original format
+//sharp can not write every input format (SVG comes out as PNG), so thumbnails
+//are always WebP and served with this content type
+const THUMBNAIL_CONTENT_TYPE = "image/webp";
+
+//Download the image and scale it down
 async function createThumbnail(url, width, maxSize) {
   const response = await axios.get(url, {
     responseType: "arraybuffer",
@@ -57,6 +61,7 @@ async function createThumbnail(url, width, maxSize) {
   return sharp(Buffer.from(response.data))
     .resize({ width, withoutEnlargement: true, fit: "contain" })
     .flatten({ background: "#ffffff" })
+    .webp()
     .toBuffer();
 }
 
@@ -95,18 +100,20 @@ export default async function thumbnail(request, response) {
     response.set("c-blocked", "could not get meta info from IPFS");
     response.status(500).send({
       error: "Could not get meta data from IPFS Gateway about " + ipfs,
-      description: ipfs + " is blocked for about 60 minutes, try again later",
+      description: ipfs + " is blocked for about 15 minutes, try again later",
     });
     return;
   }
 
   function isImage(contentType) {
-    const isImage = contentType.indexOf("image") > -1;
+    const isImage = ("" + (contentType || "")).indexOf("image") > -1;
     return isImage;
   }
 
+  //Original content type from the gateway, decides whether it is an image at all
   const contentTypeFilePath = "./images/" + ipfs + "_contentType";
-  const contentFilePath = "./images/" + ipfs;
+  //New name: older caches stored the thumbnail in the original format
+  const contentFilePath = "./images/" + ipfs + "_thumbnail.webp";
 
   //If we have the content type but its not an image, return
   if (fs.existsSync(contentTypeFilePath)) {
@@ -123,17 +130,7 @@ export default async function thumbnail(request, response) {
   //File exists, we have already cached it
   if (fs.existsSync(contentFilePath)) {
     response.set("c-from-cache", true);
-
-    try {
-      const contentType = fs.readFileSync(contentTypeFilePath, "utf-8");
-      response.set("content-type", contentType);
-    } catch (e) {
-      //If problem with the content type file, delete it
-      fs.rmSync(contentTypeFilePath, {
-        force: true,
-      });
-    }
-
+    response.set("content-type", THUMBNAIL_CONTENT_TYPE);
     response.set("ipfs", ipfs);
     response.send(fs.readFileSync(contentFilePath));
     return;
@@ -170,8 +167,8 @@ export default async function thumbnail(request, response) {
 
     response.set("c-exists-on-disk", "" + fs.existsSync(contentFilePath));
     if (fs.existsSync(contentFilePath) === true) {
-      const asdf = fs.readFileSync("./images/" + ipfs);
-      response.set("content-type", contentType);
+      const asdf = fs.readFileSync(contentFilePath);
+      response.set("content-type", THUMBNAIL_CONTENT_TYPE);
       response.set("from-cache", "true");
       response.set("ipfs", ipfs);
       response.send(asdf);
@@ -179,28 +176,27 @@ export default async function thumbnail(request, response) {
     }
 
     const MAX_SIZE = 10 * 1024 * 1024;
-    if (size < MAX_SIZE) {
-      //Fetch the binary data for the image from IPFS
-      const thumbnail = await createThumbnail(url, 300, MAX_SIZE);
-
-      fs.writeFileSync(contentFilePath, thumbnail);
-      fs.writeFileSync(contentTypeFilePath, contentType);
-      response.set("content-type", contentType);
-      response.set("ipfs", ipfs);
-      response.send(thumbnail);
-      return;
-    } else {
+    //Some gateways answer HEAD without Content-Length, then the download
+    //limit in createThumbnail is the only size check
+    if (size !== undefined && Number(size) > MAX_SIZE) {
       return response.status(400).send({
         error: "Content to large",
         "content-length": size,
         "max-size": MAX_SIZE,
       });
     }
-    response.send(size);
+    //Fetch the binary data for the image from IPFS
+    const thumbnail = await createThumbnail(url, 300, MAX_SIZE);
+
+    fs.writeFileSync(contentFilePath, thumbnail);
+    response.set("content-type", THUMBNAIL_CONTENT_TYPE);
+    response.set("ipfs", ipfs);
+    response.send(thumbnail);
+    return;
   } catch (e) {
     console.log(ipfs, "mega error", e + "");
 
-    blockedIPFS[ipfs] = new Date().getMilliseconds();
+    blockedIPFS[ipfs] = Date.now();
     response.status(500).send({ error: e + "" });
     return;
   }

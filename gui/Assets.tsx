@@ -4,26 +4,19 @@ import { debounce } from "lodash";
 import * as React from "react";
 import { MyCard } from "./MyCard";
 import { AssetImageLink } from "./AssetImageLink";
-import { AssetModal } from "./AssetModal";
 import useAssetData from "./useAssetData";
 import { formatAmount } from "./amount";
 
 export function Assets() {
-  const [assets, setAssets] = React.useState([]);
+  const [assets, setAssets] = React.useState<string[] | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
   const [gatewayURL, setGatewayURL] = React.useState(
     "https://gateway.pinata.cloud/ipfs/"
   );
   const [filterText, setFilterText] = React.useState("");
-  const [modalVisible, setModalVisible] = React.useState(false);
-
-  //If we have selected an asset
-  const [selectedAssetName, setSelectedAssetName] = React.useState("");
 
   const [page, setPage] = React.useState(1);
   const PAGE_SIZE = 25;
-
-  const showModal = () => setModalVisible(true);
-  const closeModal = () => setModalVisible(false);
 
   const debouncedSearch = React.useRef(
     debounce(async (value) => {
@@ -43,11 +36,14 @@ export function Assets() {
       .then((axiosResponse) => {
         setAssets(axiosResponse.data);
       })
-      .catch((e) => {
-        alert("Something went wrong when fetching assets");
+      .catch(() => {
+        setError("Something went wrong when fetching assets");
       });
   }, []);
 
+  if (error) {
+    return <MyCard header="Assets" body={error} />;
+  }
   if (!assets) {
     return <Loading />;
   }
@@ -97,12 +93,6 @@ export function Assets() {
         setPage={setPage}
       ></MyPaginator>
       <Spacer />
-
-      <AssetModal
-        modalVisible={modalVisible}
-        closeModal={closeModal}
-        assetName={selectedAssetName}
-      />
 
       <Table
         aria-label="Example table with static content"
@@ -163,28 +153,38 @@ function AssetAmount({ assetName }) {
   return <div>{formatAmount(asset.amount)}</div>;
 }
 
+//Only the number of holders travels to the browser, not the holder list
 const assetAddressCountCache: { [name: string]: Promise<number> } = {};
 function getAssetAddressCount(assetName: string): Promise<number> {
   if (!assetAddressCountCache[assetName]) {
     assetAddressCountCache[assetName] = axios
-      .get("/api/assetaddresses/" + encodeURIComponent(assetName))
-      .then((r) => (r.data?.holders?.length ?? 0));
+      .get("/api/assetholdercount/" + encodeURIComponent(assetName))
+      .then((r) => r.data?.count ?? 0);
+    assetAddressCountCache[assetName].catch(
+      () => delete assetAddressCountCache[assetName]
+    );
   }
   return assetAddressCountCache[assetName];
 }
 
 function AssetAddressCount({ assetName }: { assetName: string }) {
   const [count, setCount] = React.useState<number | null>(null);
+  const [failed, setFailed] = React.useState(false);
   React.useEffect(() => {
     let cancelled = false;
-    getAssetAddressCount(assetName).then((n) => {
-      if (!cancelled) setCount(n);
-    });
+    getAssetAddressCount(assetName)
+      .then((n) => {
+        if (!cancelled) setCount(n);
+      })
+      .catch(() => {
+        if (!cancelled) setFailed(true);
+      });
     return () => {
       cancelled = true;
     };
   }, [assetName]);
 
+  if (failed) return <span>-</span>;
   if (count === null) return <span>…</span>;
   return <div>{count.toLocaleString()}</div>;
 }

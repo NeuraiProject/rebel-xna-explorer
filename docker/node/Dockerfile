@@ -44,8 +44,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /root
 
+# Commit of BRANCH to build. Empty = branch head at the time of the first
+# build; Docker caches that layer, so later commits never arrive. Pin it.
+ARG SOURCE_COMMIT=
 RUN git clone --branch ${BRANCH} --single-branch \
-    https://github.com/NeuraiProject/Neurai.git
+    https://github.com/NeuraiProject/Neurai.git \
+ && if [ -n "${SOURCE_COMMIT}" ]; then git -C Neurai checkout --detach "${SOURCE_COMMIT}"; fi
 
 WORKDIR /root/Neurai/depends
 

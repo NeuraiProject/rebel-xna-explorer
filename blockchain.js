@@ -112,6 +112,29 @@ export async function getType(value) {
 export function getBlockByHeight(height) {
   return Reader.getBlockByHeight(height);
 }
+//Header only, enough for the block time without fetching every transaction
+export async function getBlockHeaderByHeight(height) {
+  const hash = await rpc(methods.getblockhash, [height]);
+  return rpc(methods.getblockheader, [hash]);
+}
+//"main", "test" or "regtest"
+export async function getChain() {
+  const info = await rpc(methods.getblockchaininfo, []);
+  return info.chain;
+}
+//Asset names are upper case but users type them in any case
+export async function findAssetName(value) {
+  const candidates = [...new Set([value, value.toUpperCase()])];
+  for (const name of candidates) {
+    try {
+      const asset = await Reader.getAsset(name);
+      if (asset && asset.name) {
+        return asset.name;
+      }
+    } catch (e) {}
+  }
+  return null;
+}
 export function getBestBlockHash() {
   return Reader.getBestBlockHash();
 }
@@ -143,7 +166,10 @@ export default {
   getAssets,
   getBlock,
   getBlockByHeight,
+  getBlockHeaderByHeight,
   getBestBlockHash,
+  getChain,
+  findAssetName,
   getCoinsInCirculation,
   getRawMempool,
   getTransaction,

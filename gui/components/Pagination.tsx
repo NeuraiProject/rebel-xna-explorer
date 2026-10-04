@@ -61,7 +61,7 @@ export function Pagination({ total, page, onChange }: PaginationProps) {
       <button
         className="pagination-btn"
         onClick={() => onChange(page + 1)}
-        disabled={page === total}
+        disabled={page >= total}
       >
         ›
       </button>

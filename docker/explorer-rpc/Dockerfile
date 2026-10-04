@@ -1,11 +1,10 @@
 # ── Rebel XNA Explorer ─────────────────────────────────────────────────────
+# Built from this checkout, so what runs is what you have locally. The build
+# context is the repo ROOT; docker-compose.yml builds it with:
+#     build: { context: .., dockerfile: docker/explorer-rpc/Dockerfile }
 FROM node:lts-slim
 
-ARG REPO_URL=https://github.com/NeuraiProject/rebel-xna-explorer.git
-ARG REPO_REF=master
-
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
     ca-certificates \
     python3 \
     make \
@@ -14,16 +13,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-RUN git clone --depth 1 --branch "${REPO_REF}" "${REPO_URL}" /tmp/src \
- && cp -a /tmp/src/. /app/ \
- && rm -rf /tmp/src \
- && npm install \
- && npm run build \
+# Dependencies first for better layer caching. npm ci installs exactly what
+# package-lock.json says, so every build gets the same versions.
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build \
  && npm prune --omit=dev
 
 ENV NODE_ENV=production
 
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY docker/explorer-rpc/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 8888

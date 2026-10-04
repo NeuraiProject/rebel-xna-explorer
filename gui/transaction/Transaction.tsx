@@ -11,9 +11,17 @@ import { Outputs } from "./Outputs";
 
 export function Transaction() {
   const id = "" + getParam("id");
-  const transaction = useTransaction(id);
+  const { transaction, error } = useTransaction(id);
   const config = useConfig();
 
+  if (error) {
+    return (
+      <MyCard
+        header="Transaction"
+        body={"Could not load transaction " + id + ": " + error}
+      />
+    );
+  }
   if (!transaction) {
     return null;
   }

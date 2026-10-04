@@ -63,13 +63,27 @@ app.get("/debug", (req, res) => {
   res.send(getDebugMessage());
 });
 
+//Which chain the node follows, asked in the background so /gui-settings never waits
+let network = null;
+function refreshNetwork() {
+  blockchain
+    .getChain()
+    .then((chain) => (network = chain))
+    .catch(() => {});
+}
+refreshNetwork();
+
 app.get("/gui-settings", (_, response) => {
+  if (!network) {
+    refreshNetwork();
+  }
   response.send({
     baseCurrency: CONFIG.baseCurrency,
     headline: CONFIG.headline,
     theme: CONFIG.theme,
     ipfs_gateway: CONFIG.ipfs_gateway,
     price_lookup_enabled: CONFIG.price_lookup_enabled !== false,
+    network,
   });
 });
 app.get("/thumbnail", thumbnail);
@@ -77,6 +91,13 @@ app.get("/thumbnail", thumbnail);
 app.get("/gettype/:value", async function (req, res) {
   try {
     const type = await blockchain.getType(req.params.value);
+    if (type === "UNKNOWN") {
+      const name = await blockchain.findAssetName(req.params.value);
+      if (name) {
+        res.send({ type: "ASSET", name });
+        return;
+      }
+    }
     res.send({ type });
   } catch (e) {
     console.dir(e);
@@ -159,6 +180,20 @@ app.get("/api/blocks/:blockHash", (req, res) => {
       });*/
     });
 });
+app.get("/api/blockheader/:height", async (req, res) => {
+  const height = Number(req.params.height);
+  if (!Number.isSafeInteger(height) || height < 0) {
+    res.status(400).send({ error: "Height must be a non negative integer" });
+    return;
+  }
+  try {
+    const header = await blockchain.getBlockHeaderByHeight(height);
+    res.send(header);
+  } catch (e) {
+    console.dir(e);
+    res.status(500).send({ error: "" + e });
+  }
+});
 app.get("/api/blocks", async (req, res) => {
   try {
     let hash = await blockchain.getBestBlockHash();
@@ -203,6 +238,18 @@ app.get("/api/assetaddresses/:name", async (req, res) => {
       } catch (_) {}
     }
     res.send({ ownerAddress, ownerAmount, holders });
+  } catch (e) {
+    console.dir(e);
+    res.status(500).send({ error: "" + e });
+  }
+});
+
+//The proxy refuses listaddressesbyasset with onlytotal, count here instead
+app.get("/api/assetholdercount/:name", async (req, res) => {
+  const name = "" + req.params.name;
+  try {
+    const holders = await blockchain.getAddressesByAsset(name);
+    res.send({ count: Object.keys(holders || {}).length });
   } catch (e) {
     console.dir(e);
     res.status(500).send({ error: "" + e });

@@ -41,3 +41,15 @@ export function formatSatoshis(satoshis: bigint): string {
 export function formatAmount(value: Amount | null | undefined): string {
   return formatSatoshis(toSatoshis(value));
 }
+
+//Integer satoshis as the node sends them (number, or decimal string when unsafe)
+export function rawSatoshis(value: Amount | null | undefined): bigint {
+  if (value === null || value === undefined || value === "") {
+    return 0n;
+  }
+  return BigInt(value);
+}
+
+export function formatRawSatoshis(value: Amount | null | undefined): string {
+  return formatSatoshis(rawSatoshis(value));
+}

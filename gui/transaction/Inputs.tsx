@@ -52,10 +52,13 @@ export function Inputs({ transaction }: { transaction: ITransaction }) {
   );
 }
 function AssetData({ txid, index }: { txid: string; index: number }) {
-  const transaction = useTransaction(txid);
+  const { transaction, error } = useTransaction(txid);
 
+  if (error) {
+    return <div title={error}>?</div>;
+  }
   if (!transaction) {
-    return <div>nada</div>;
+    return <div>…</div>;
   }
 
   const utxo = transaction.vout[index];

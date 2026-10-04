@@ -32,9 +32,12 @@ export function Asset() {
     axios
       .get(URL)
       .then((r) => setAddresses(r.data))
-      .catch(() => setError("No se pudieron cargar las direcciones"));
+      .catch(() => setError("Could not load the holders"));
   }, [assetName]);
 
+  if (data === undefined) {
+    return <Loading />;
+  }
   if (!data) {
     return (
       <div>
@@ -43,26 +46,23 @@ export function Asset() {
     );
   }
 
+  //The owner holds ASSET!, not necessarily ASSET: show it apart from the holders
   const ownerAddress = addresses?.ownerAddress || null;
-  const isOwnerAsset = assetName.endsWith("!");
+  const holders = addresses?.holders || [];
 
-  const rows: Array<IHolder & { isOwner: boolean }> = [];
-  if (addresses) {
-    if (ownerAddress) {
-      rows.push({
-        address: ownerAddress,
-        amount: addresses.ownerAmount ?? 1,
-        isOwner: true,
-      });
-      addresses.holders
-        .filter((h) => h.address !== ownerAddress)
-        .forEach((h) => rows.push({ ...h, isOwner: false }));
-    } else {
-      addresses.holders.forEach((h) => rows.push({ ...h, isOwner: false }));
-    }
-  }
+  const holdersHeader = `Holders (${addresses ? holders.length.toLocaleString() : "..."})`;
 
-  const holdersHeader = `Holders (${addresses ? rows.length.toLocaleString() : "..."})`;
+  const ownerLine = ownerAddress && (
+    <>
+      <div>
+        <span className="badge badge-sm" title={`Holds ${assetName}!`}>
+          Owner
+        </span>{" "}
+        <a href={"/address/" + ownerAddress}>{ownerAddress}</a>
+      </div>
+      <Spacer />
+    </>
+  );
 
   const holdersBody = !addresses ? (
     error ? (
@@ -70,41 +70,43 @@ export function Asset() {
     ) : (
       <Loading />
     )
-  ) : rows.length === 0 ? (
-    <div>No hay direcciones con este asset.</div>
   ) : (
-    <Table>
-      <Table.Header>
-        <Table.Column>#</Table.Column>
-        <Table.Column>Address</Table.Column>
-        <Table.Column>Amount</Table.Column>
-      </Table.Header>
-      <Table.Body>
-        {rows.map((row, idx) => {
-          const URL = "/address/" + row.address;
-          return (
-            <Table.Row key={row.address}>
-              <Table.Cell>
-                {row.isOwner ? (
-                  <span
-                    className="badge badge-sm"
-                    title={`Owner (${assetName}!)`}
-                  >
-                    Owner
-                  </span>
-                ) : (
-                  idx + (ownerAddress ? 0 : 1)
-                )}
-              </Table.Cell>
-              <Table.Cell>
-                <a href={URL}>{row.address}</a>
-              </Table.Cell>
-              <Table.Cell>{formatAmount(row.amount)}</Table.Cell>
-            </Table.Row>
-          );
-        })}
-      </Table.Body>
-    </Table>
+    <>
+      {ownerLine}
+      {holders.length === 0 ? (
+        <div>No addresses hold this asset.</div>
+      ) : (
+        <Table>
+          <Table.Header>
+            <Table.Column>#</Table.Column>
+            <Table.Column>Address</Table.Column>
+            <Table.Column>Amount</Table.Column>
+          </Table.Header>
+          <Table.Body>
+            {holders.map((row, idx) => {
+              const URL = "/address/" + row.address;
+              return (
+                <Table.Row key={row.address}>
+                  <Table.Cell>
+                    {idx + 1}
+                    {row.address === ownerAddress && (
+                      <>
+                        {" "}
+                        <span className="badge badge-sm">Owner</span>
+                      </>
+                    )}
+                  </Table.Cell>
+                  <Table.Cell>
+                    <a href={URL}>{row.address}</a>
+                  </Table.Cell>
+                  <Table.Cell>{formatAmount(row.amount)}</Table.Cell>
+                </Table.Row>
+              );
+            })}
+          </Table.Body>
+        </Table>
+      )}
+    </>
   );
 
   return (
@@ -112,10 +114,7 @@ export function Asset() {
       <h1>{assetName}</h1>
       <MyCard header="Asset data" body={<Meta asset={data} />} />
       <Spacer />
-      {!isOwnerAsset && (
-        <MyCard header={holdersHeader} body={holdersBody} />
-      )}
-      {isOwnerAsset && <MyCard header={holdersHeader} body={holdersBody} />}
+      <MyCard header={holdersHeader} body={holdersBody} />
     </div>
   );
 }

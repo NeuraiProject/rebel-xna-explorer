@@ -2,7 +2,10 @@ import * as React from "react";
 import { Loading } from "../components";
 import { MyCard } from "../MyCard";
 
-export function Unspent({ address, unspent }) {
+export function Unspent({ address, unspent, error }) {
+  if (error) {
+    return <div>Could not load UTXOs: {error}</div>;
+  }
   if (!unspent) {
     return (
       <>
@@ -11,7 +14,7 @@ export function Unspent({ address, unspent }) {
     );
   }
   if (unspent.length > 100) {
-    const URL = "/api/getaddressutxos/" + address;
+    const URL = "/api/getaddressutxos/" + encodeURIComponent(address);
     return (
       <div>
         <a target="_blank" href={URL}>
@@ -33,5 +36,5 @@ export function Unspent({ address, unspent }) {
     </ol>
   );
 
-  return <MyCard header="Unspent transaction outputs (UTXO" body={body} />;
+  return <MyCard header="Unspent transaction outputs (UTXO)" body={body} />;
 }

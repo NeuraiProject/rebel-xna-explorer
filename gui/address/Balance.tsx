@@ -1,7 +1,8 @@
 import * as React from "react";
 import { Table } from "../components";
 import { MyCard } from "../MyCard";
-import { IBalanceProps, getTwoDecimalTrunc } from "./Address";
+import { IBalanceProps } from "./Address";
+import { formatRawSatoshis, rawSatoshis } from "../amount";
 
 interface IBalanceWithAssetsProps extends IBalanceProps {
   assets?: any[];
@@ -13,20 +14,23 @@ export function Balance({
   xnaUsdRate,
   assets = [],
 }: IBalanceWithAssetsProps) {
-  const balanceAmount = Number(balance) / 100000000;
-  const xnaDisplay = getTwoDecimalTrunc(balanceAmount).toLocaleString();
+  const xnaDisplay = formatRawSatoshis(balance);
   const usdDisplay =
     baseCurrency === "XNA" && xnaUsdRate
-      ? getTwoDecimalTrunc(balanceAmount * xnaUsdRate).toLocaleString()
+      ? ((Number(balance) / 1e8) * xnaUsdRate).toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
       : null;
 
+  //getaddressbalance with includeAssets lists XNA too, it already has its own row
   const assetRows = (assets || [])
-    .map((asset) => {
-      const name = asset.assetName;
-      const amount = Number(asset.balance) / 100000000;
-      return { name, amount };
-    })
-    .filter((a) => a.amount !== 0);
+    .filter((asset) => asset.assetName !== "XNA")
+    .filter((asset) => rawSatoshis(asset.balance) !== 0n)
+    .map((asset) => ({
+      name: asset.assetName,
+      amount: formatRawSatoshis(asset.balance),
+    }));
 
   const body = (
     <Table striped sticked>
@@ -55,9 +59,7 @@ export function Balance({
         {assetRows.map((a) => (
           <Table.Row key={a.name}>
             <Table.Cell>{a.name}</Table.Cell>
-            <Table.Cell>
-              {getTwoDecimalTrunc(a.amount).toLocaleString()}
-            </Table.Cell>
+            <Table.Cell>{a.amount}</Table.Cell>
           </Table.Row>
         ))}
       </Table.Body>

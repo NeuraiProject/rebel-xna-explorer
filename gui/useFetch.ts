@@ -1,14 +1,32 @@
 import React from "react";
 import axios from "axios";
-export function useFetch(url: string): any {
-  const [data, setData] = React.useState<null | object>(null);
+
+export interface IFetchResult {
+  data: any;
+  error: string | null;
+}
+
+export function useFetch(url: string): IFetchResult {
+  const [result, setResult] = React.useState<IFetchResult>({
+    data: null,
+    error: null,
+  });
 
   React.useEffect(() => {
-    async function work() {
-      const response = await axios.get(url);
-      setData(response.data);
-    }
-    work();
+    let cancelled = false;
+    setResult({ data: null, error: null });
+    axios
+      .get(url)
+      .then((response) => {
+        if (!cancelled) setResult({ data: response.data, error: null });
+      })
+      .catch((e) => {
+        const message = e?.response?.data?.error || e?.message || "" + e;
+        if (!cancelled) setResult({ data: null, error: message });
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [url]);
-  return data;
+  return result;
 }

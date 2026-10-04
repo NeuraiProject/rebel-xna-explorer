@@ -8,15 +8,22 @@ import { MyCard } from "./MyCard";
 export function Block() {
   const hash = getParam("hash");
   const [data, setData] = React.useState(null);
+  const [error, setError] = React.useState<string | null>(null);
   React.useEffect(() => {
-    const URL = "/api/blocks/" + hash;
-    async function work() {
-      const asdf = await axios.get(URL);
-      setData(asdf.data);
-    }
-    work();
+    const URL = "/api/blocks/" + encodeURIComponent("" + hash);
+    axios
+      .get(URL)
+      .then((response) => setData(response.data))
+      .catch((e) =>
+        setError(e?.response?.data?.error || e?.message || "" + e)
+      );
   }, []);
 
+  if (error) {
+    return (
+      <MyCard header="Block" body={"Could not load block " + hash + ": " + error} />
+    );
+  }
   if (!data) {
     return null;
   }

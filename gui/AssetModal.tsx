@@ -1,9 +1,10 @@
 import * as React from "react";
-import { Modal, Text } from "./components";
-import useAssetData from "./useAssetData";
+import { useConfig } from "./useConfig";
 
 export function Meta({ asset }) {
+  const config = useConfig();
   const ipfs = asset.ipfs_hash;
+  const gateway = config?.ipfs_gateway || "https://ipfs.io/ipfs/";
 
   return (
     <>
@@ -14,7 +15,7 @@ export function Meta({ asset }) {
             textAlign: "center",
           }}
         >
-          <a href={"https://ipfs.io/ipfs/" + ipfs} target="_blank">
+          <a href={gateway + ipfs} target="_blank" rel="noopener">
             IPFS link
             <br />
             <img
@@ -25,32 +26,5 @@ export function Meta({ asset }) {
         </div>
       )}
     </>
-  );
-}
-export function AssetModal({ modalVisible, closeModal, assetName }) {
-  if (modalVisible === false) {
-    //Returned a closed modal
-    return <Modal visible={modalVisible} onClose={closeModal} />;
-  }
-  const asset = useAssetData(assetName);
-  if (!asset) {
-    //Returned a closed modal
-    return <Modal visible={modalVisible} onClose={closeModal} />;
-  }
-  return (
-    <Modal
-      visible={modalVisible}
-      onClose={closeModal}
-    >
-      <Modal.Header>
-        <Modal.Title>
-          Asset data for <Text b size={18}>{asset.name}</Text>
-        </Modal.Title>
-        <button className="modal-close" onClick={closeModal}>×</button>
-      </Modal.Header>
-      <Modal.Body>
-        <Meta asset={asset} />
-      </Modal.Body>
-    </Modal>
   );
 }

@@ -4,25 +4,53 @@ import { Input } from "./components";
 import { MyCard } from "./MyCard";
 import logoUrl from "./logo.png";
 
+type Theme = "light" | "dark";
+
+//Only a theme the user picked with the toggle is saved
+function getSavedTheme(): Theme | null {
+  const saved = localStorage.getItem("theme");
+  return saved === "light" || saved === "dark" ? saved : null;
+}
+
+const NETWORK_LABELS: { [chain: string]: string } = {
+  main: "Mainnet",
+  test: "Testnet",
+  regtest: "Regtest",
+};
+
 export function Navigator() {
   const [headline, setHeadline] = React.useState("");
+  const [network, setNetwork] = React.useState<string | null>(null);
   const [online, setOnline] = React.useState<boolean | null>(null);
-  const [theme, setTheme] = React.useState<"light" | "dark">(() => {
-    if (typeof window === "undefined") return "light";
-    return (localStorage.getItem("theme") as "light" | "dark") || "light";
-  });
+  const [theme, setTheme] = React.useState<Theme>(
+    () => getSavedTheme() || "light"
+  );
 
   React.useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
   }, [theme]);
 
-  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    localStorage.setItem("theme", next);
+    setTheme(next);
+  };
 
   React.useEffect(() => {
     axios
       .get("/gui-settings")
-      .then((response) => setHeadline(response.data["headline"] || ""))
+      .then((response) => {
+        const settings = response.data;
+        setHeadline(settings.headline || "");
+        setNetwork(settings.network || null);
+        //The configured theme is the default until the user picks one
+        if (
+          !getSavedTheme() &&
+          (settings.theme === "light" || settings.theme === "dark")
+        ) {
+          setTheme(settings.theme);
+        }
+      })
       .catch((e) => console.dir(e));
   }, []);
 
@@ -44,7 +72,10 @@ export function Navigator() {
     };
   }, []);
 
-  const networkLabel = /mainnet/i.test(headline) ? "Mainnet" : "Testnet";
+  //The node tells the chain; the headline is only a fallback while it is unknown
+  const networkLabel =
+    (network && NETWORK_LABELS[network]) ||
+    (/mainnet/i.test(headline) ? "Mainnet" : "Testnet");
 
   return (
     <nav className="navbar">
@@ -119,21 +150,29 @@ export function SearchBar() {
     event.preventDefault();
     const value = query.trim();
     if (!value) return;
-    axios.get("/gettype/" + value).then((response) => {
-      if (response.data.type === "BLOCK") {
-        const path = value.length > 15 ? "/blockhash/" : "/block/";
-        window.location.href = path + value;
-      }
-      if (response.data.type === "TRANSACTION") {
-        window.location.href = "/tx/" + value;
-      }
-      if (response.data.type === "ADDRESS") {
-        window.location.href = "/address/" + value;
-      }
-      if (response.data.type === "UNKNOWN") {
-        alert("Sorry, do not know what to do with " + value);
-      }
-    });
+    axios
+      .get("/gettype/" + encodeURIComponent(value))
+      .then((response) => {
+        const encodedValue = encodeURIComponent(value);
+        if (response.data.type === "BLOCK") {
+          const path = value.length > 15 ? "/blockhash/" : "/block/";
+          window.location.href = path + encodedValue;
+        }
+        if (response.data.type === "TRANSACTION") {
+          window.location.href = "/tx/" + encodedValue;
+        }
+        if (response.data.type === "ADDRESS") {
+          window.location.href = "/address/" + encodedValue;
+        }
+        if (response.data.type === "ASSET") {
+          window.location.href =
+            "/asset/" + encodeURIComponent(response.data.name);
+        }
+        if (response.data.type === "UNKNOWN") {
+          alert("Sorry, do not know what to do with " + value);
+        }
+      })
+      .catch(() => alert("Sorry, the search failed, try again later"));
   };
 
   const body = (
@@ -141,7 +180,7 @@ export function SearchBar() {
       <Input
         size="xl"
         onChange={(event) => setQuery(event.target.value)}
-        placeholder="Address / transaction / block id"
+        placeholder="Address / transaction / block id / asset"
       />
     </form>
   );

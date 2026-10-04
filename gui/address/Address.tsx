@@ -18,12 +18,22 @@ export function Address() {
   const address = getParam("address");
 
   const config = useConfig();
-  const unspent = useFetch("/api/getaddressutxos/" + address);
-  const data = useFetch("/api/addresses/" + address);
+  const encodedAddress = encodeURIComponent("" + address);
+  const { data: unspent, error: unspentError } = useFetch(
+    "/api/getaddressutxos/" + encodedAddress
+  );
+  const { data, error } = useFetch("/api/addresses/" + encodedAddress);
   const xnaUsdRate = useNeuraiUSD();
 
+  if (error) {
+    return (
+      <MyCard
+        header="Address"
+        body={"Could not load " + address + ": " + error}
+      />
+    );
+  }
   if (!data) {
-    console.log("data data is nothing");
     return null;
   }
 
@@ -50,7 +60,9 @@ export function Address() {
       <Spacer></Spacer>
       <MyCard
         header={header}
-        body={<Unspent address={address} unspent={unspent} />}
+        body={
+          <Unspent address={address} unspent={unspent} error={unspentError} />
+        }
       />
     </div>
   );
@@ -87,10 +99,4 @@ interface IBalance {
   balance: number;
   received: number;
   assets: any[];
-}
-export function getTwoDecimalTrunc(num: number) {
-  //Found answer here https://stackoverflow.com/questions/11832914/how-to-round-to-at-most-2-decimal-places-if-necessary
-  //In JavaScript the number 77866.98 minus 111 minus 0.2 equals 77755.95999999999
-  //We want it to be 77755.96
-  return Math.trunc(num * 100) / 100;
 }

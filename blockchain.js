@@ -21,8 +21,9 @@ const Reader = createReader({
   password: CONFIG.neurai_password,
 });
 
-//RPC errors are plain objects, not Error instances, and behind the rpc-proxy
-//the node's message sits a few levels down: {error: {error: {message}}}
+//RPC errors are plain objects, not Error instances, and the node's message may
+//sit a level or two down: {error: {message}} from wallet-services, one more
+//level from the retired neurai-rpc-proxy
 export function rpcErrorMessage(e, depth = 0) {
   if (!e) return "Unknown error";
   if (typeof e === "string") return e;

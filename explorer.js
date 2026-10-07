@@ -576,10 +576,10 @@ export async function getPriceForChain() {
   Coins that exist, straight from the node: gettxoutsetinfo adds up the UTXO
   set. It scans the whole set and makes the node flush its cache, so it is
   asked at most once per new block, in the background, one call at a time;
-  pages show the last answer and never wait for it. Public proxies refuse it
+  pages show the last answer and never wait for it. Public RPCs refuse it
   ("Not in whitelist"): then it is not asked again for an hour, and the
-  schedule below is all there is. docker-compose.yml enables it on the
-  stack's own proxy (PROXY_EXTRA_METHODS).
+  schedule below is all there is. docker-compose.yml grants it to the
+  explorer's key on the stack's own wallet-services (PROXY_HTTP_CLIENTS).
 */
 const circulation = { hash: null, amount: null, height: null, pending: false, retryAt: 0 };
 function refreshCirculation(tipHash) {

@@ -8,7 +8,7 @@ set -eu
 : "${EXPLORER_IPFS_GATEWAY:=https://gateway.pinata.cloud/ipfs/}"
 : "${EXPLORER_PRICE_LOOKUP_ENABLED:=false}"
 
-: "${EXPLORER_NEURAI_URL:=http://rpc-proxy:19999/rpc}"
+: "${EXPLORER_NEURAI_URL:=http://wallet-services:19999/rpc}"
 : "${EXPLORER_NEURAI_USERNAME:=anonymous}"
 : "${EXPLORER_NEURAI_PASSWORD:=anonymous}"
 

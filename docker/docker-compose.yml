@@ -6,7 +6,7 @@ services:
       args:
         BRANCH: DePIN-Test
         # Pinned so rebuilds are reproducible; it must match NEURAI_EXPECTED_GENESIS below.
-        SOURCE_COMMIT: "${NODE_SOURCE_COMMIT:-e64965d7311ff51d0f3a9a3a48d8e75992122b5c}"
+        SOURCE_COMMIT: "${NODE_SOURCE_COMMIT:-a9f7ca593a8d5121d6bb07bbb55670ae5a6a09e3}"
     container_name: neurai-testnet-node
     restart: unless-stopped
 
@@ -25,11 +25,11 @@ services:
 
       # ── RPC ──────────────────────────────────────────────────────────────
       # User/password come from .env (copy .env.example) and are shared with
-      # the rpc-proxy, so both always agree.
+      # wallet-services, so both always agree.
       NEURAI_RPC_USER: "${NODE_RPC_USER:-neurai}"
       NEURAI_RPC_PASSWORD: "${NODE_RPC_PASSWORD:-changeme}"
       # Any IP may connect, but the RPC port is only published on the host's
-      # loopback (see ports): only the proxy and the host itself reach it.
+      # loopback (see ports): only wallet-services and the host itself reach it.
       NEURAI_RPC_ALLOW_IP: "0.0.0.0/0"
       NEURAI_RPC_PORT: "19101"
       NEURAI_RPC_TIMEOUT: "240"
@@ -70,15 +70,14 @@ services:
       retries: 3
       start_period: 60s
 
-  rpc-proxy:
+  wallet-services:
     build:
-      context: ./rpc-proxy
-      dockerfile: Dockerfile
-      args:
-        REPO_URL: https://github.com/NeuraiProject/neurai-rpc-proxy.git
-        # Pinned commit; bump it to update the proxy (a branch would stay cached).
-        REPO_REF: "${PROXY_SOURCE_COMMIT:-423a177dd62fcb7f5e2f4f2d1de8168eabe79110}"
-    container_name: neurai-testnet-rpc-proxy
+      # The HTTP API of NeuraiProject/neurai-wallet-services, built straight
+      # from GitHub with its own Dockerfile at a pinned commit; bump it to
+      # update (a branch would stay cached).
+      context: "https://github.com/NeuraiProject/neurai-wallet-services.git#${WALLET_SERVICES_SOURCE_COMMIT:-0c06987e3a07653a62c5f76ae941e2e6e0291199}"
+      dockerfile: docker/wallet-services/Dockerfile
+    container_name: neurai-testnet-wallet-services
     restart: unless-stopped
 
     logging:
@@ -88,29 +87,37 @@ services:
         max-file: "5"
 
     environment:
-      PROXY_CONCURRENCY: "4"
-      PROXY_ENVIRONMENT: "Neurai Testnet"
-      PROXY_ENDPOINT: "http://rpc-proxy:19999/rpc"
-      PROXY_LOCAL_PORT: "19999"
-      # Testnet genesis of the DePIN-Test branch; the proxy refuses to start without it.
+      # HTTP API only (POST /rpc): no /push WebSocket, so no auth token or ZMQ.
+      PROXY_WSS_ENABLED: "false"
+      PROXY_HTTP_ENABLED: "true"
+      # The listener port, with or without WebSocket. TLS stays off: only the
+      # explorer and the host's loopback reach it.
+      PROXY_WSS_PORT: "19999"
+      PROXY_WSS_TLS_ENABLED: "false"
+      PROXY_SERVICE_ID: "neurai-explorer-testnet"
+      PROXY_HTTP_ENVIRONMENT: "Neurai Testnet"
+      # Testnet genesis of the DePIN-Test branch: a node on another chain is
+      # never used.
+      NEURAI_NETWORK: "testnet"
       NEURAI_EXPECTED_GENESIS: "0000008b384aeffecdab182575dc4e86c9f07f90318c65088532660ed9a8a021"
       NEURAI_NODE_NAME: "neuraid-testnet"
       NEURAI_NODE_URL: "http://neuraid:19101"
       NEURAI_RPC_USER: "${NODE_RPC_USER:-neurai}"
       NEURAI_RPC_PASSWORD: "${NODE_RPC_PASSWORD:-changeme}"
-      # Read-only methods the public proxy leaves out because they are slow.
-      # gettxoutsetinfo gives the explorer the coins that exist; it scans the
-      # whole UTXO set, and the proxy runs it at most once per block (cached).
-      # Only the names allowed in rpc-proxy/extra-whitelist.js are accepted.
-      PROXY_EXTRA_METHODS: "gettxoutsetinfo"
+      # The explorer is a trusted client, recognised by the key it sends as
+      # its RPC password: its own request budget instead of the per-IP one,
+      # and gettxoutsetinfo (coins in circulation), which scans the whole UTXO
+      # set and is left out of the public whitelist. Answered at most once per
+      # block (cached), however many pages ask.
+      PROXY_HTTP_CLIENTS: '[{"name":"explorer","key":"${EXPLORER_RPC_KEY:-change-this-explorer-key}","extra_methods":["gettxoutsetinfo"]}]'
 
     expose:
       - "19999"
 
     ports:
-      # Loopback only: the explorer reaches the proxy over neurai_net, and with
-      # extra methods on it this proxy should not be open to the internet.
-      # Publish it as "19999:19999" again to offer a public RPC.
+      # Loopback only: the explorer reaches it over neurai_net. Publish it as
+      # "19999:19999" to offer a public RPC (other clients get the per-IP
+      # limits and the public whitelist).
       - "127.0.0.1:19999:19999"
 
     networks:
@@ -136,9 +143,10 @@ services:
 
     environment:
       EXPLORER_BASE_CURRENCY: "XNA"
-      EXPLORER_NEURAI_URL: "http://rpc-proxy:19999/rpc"
-      EXPLORER_NEURAI_USERNAME: "anonymous"
-      EXPLORER_NEURAI_PASSWORD: "anonymous"
+      EXPLORER_NEURAI_URL: "http://wallet-services:19999/rpc"
+      # The password is the explorer's key in wallet-services (PROXY_HTTP_CLIENTS).
+      EXPLORER_NEURAI_USERNAME: "explorer"
+      EXPLORER_NEURAI_PASSWORD: "${EXPLORER_RPC_KEY:-change-this-explorer-key}"
       EXPLORER_HTTP_PORT: "8888"
       EXPLORER_HEADLINE: "Neurai Testnet"
       EXPLORER_THEME: "light"
@@ -155,7 +163,7 @@ services:
       - neurai_net
 
     depends_on:
-      - rpc-proxy
+      - wallet-services
 
 volumes:
   neurai_data:

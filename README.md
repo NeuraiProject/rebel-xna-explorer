@@ -41,13 +41,15 @@ The node needs to be fully indexed and your neurai.conf must include
     * timestampindex=1
     * spentindex=1
 
-- If the explorer talks to the node through an RPC proxy, the proxy must allow
-  these methods: `getbestblockhash`, `getblock`, `getblockhash`,
+- If the explorer talks to the node through an RPC service such as
+  neurai-wallet-services, the service must allow these methods: `getbestblockhash`, `getblock`, `getblockhash`,
   `getblockheader`, `getblockchaininfo`, `getchaintxstats`, `getnetworkhashps`,
   `getmempoolinfo`, `getrawmempool`, `getmempoolentry`, `getrawtransaction`,
   `getspentinfo`, `validateaddress`, `getaddressbalance`, `getaddressdeltas`,
   `getaddressutxos`, `getaddressmempool`, `getassetdata`, `listassets` and
-  `listaddressesbyasset`. The public neurai-rpc-proxy allows all of them.
+  `listaddressesbyasset`. The public whitelist of neurai-wallet-services
+  allows all of them; `gettxoutsetinfo`, for the coins in circulation, is
+  optional (without it the home page uses the emission schedule).
 
 ## How to install
 Clone the git repo
@@ -193,10 +195,10 @@ services wired together on an internal network:
 | Service      | Container                     | Description                                                  |
 |--------------|-------------------------------|--------------------------------------------------------------|
 | `neuraid`    | `neurai-testnet-node`         | Full Neurai node (testnet by default) with all indexes on    |
-| `rpc-proxy`  | `neurai-testnet-rpc-proxy`    | Anonymous RPC proxy in front of `neuraid`                    |
-| `explorer`   | `neurai-testnet-explorer`     | This web explorer, talking to the proxy (not the node)       |
+| `wallet-services` | `neurai-testnet-wallet-services` | HTTP RPC API (neurai-wallet-services) in front of `neuraid` |
+| `explorer`   | `neurai-testnet-explorer`     | This web explorer, talking to wallet-services (not the node) |
 
-Flow: browser → `explorer:8888` → `rpc-proxy:19999` → `neuraid:19101`.
+Flow: browser → `explorer:8888` → `wallet-services:19999` → `neuraid:19101`.
 
 What each image is built from:
 
@@ -204,10 +206,10 @@ What each image is built from:
   changes are what runs. Dependencies come from `package-lock.json` (`npm ci`).
 - `neuraid`: branch `DePIN-Test` of NeuraiProject/Neurai at the pinned
   `NODE_SOURCE_COMMIT`.
-- `rpc-proxy`: NeuraiProject/neurai-rpc-proxy at the pinned
-  `PROXY_SOURCE_COMMIT`.
+- `wallet-services`: NeuraiProject/neurai-wallet-services at the pinned
+  `WALLET_SERVICES_SOURCE_COMMIT`, built from GitHub with its own Dockerfile.
 
-The node and the proxy are pinned on purpose: Docker caches the layer that
+The node and wallet-services are pinned on purpose: Docker caches the layer that
 fetches the sources, so following a branch would keep whatever commit the
 first build saw. To update them, change the commit in `docker/.env` and run
 `docker compose up -d --build`.
@@ -223,23 +225,24 @@ From the project root:
 
 ```bash
 cd docker
-cp .env.example .env   # then set NODE_RPC_PASSWORD
+cp .env.example .env   # then set NODE_RPC_PASSWORD and EXPLORER_RPC_KEY
 docker compose up -d --build
 ```
 
 The first build takes a while because `neuraid` is compiled from source
 (branch `DePIN-Test`). Subsequent rebuilds reuse Docker layer cache.
 
-Once the `neuraid` healthcheck passes, the proxy and the explorer will start
-automatically.
+Once the `neuraid` healthcheck passes, wallet-services and the explorer will
+start automatically.
 
 - Explorer UI: http://localhost:8888 (published on all interfaces)
-- RPC proxy:   http://127.0.0.1:19999/rpc (host loopback only; it only
+- RPC API:     http://127.0.0.1:19999/rpc (host loopback only; it only
   forwards whitelisted methods). The explorer reaches it over the Docker
-  network. To offer it as a public RPC, publish it as `"19999:19999"` again.
+  network. To offer it as a public RPC, publish it as `"19999:19999"`: other
+  clients get the per-IP limits and the public whitelist.
 - Node P2P:    port `19100` (testnet)
-- Node RPC:    http://127.0.0.1:19101 (host loopback only; the proxy reaches
-  the node over the Docker network). Do not publish it on `0.0.0.0`: Docker
+- Node RPC:    http://127.0.0.1:19101 (host loopback only; wallet-services
+  reaches the node over the Docker network). Do not publish it on `0.0.0.0`: Docker
   bypasses host firewalls such as ufw, and this is the node's full RPC.
 
 ### Configuration via environment variables
@@ -254,9 +257,9 @@ edit the images.
 | Variable                         | Default                         |
 |----------------------------------|---------------------------------|
 | `EXPLORER_BASE_CURRENCY`         | `XNA`                           |
-| `EXPLORER_NEURAI_URL`            | `http://rpc-proxy:19999/rpc`    |
-| `EXPLORER_NEURAI_USERNAME`       | `anonymous`                     |
-| `EXPLORER_NEURAI_PASSWORD`       | `anonymous`                     |
+| `EXPLORER_NEURAI_URL`            | `http://wallet-services:19999/rpc` |
+| `EXPLORER_NEURAI_USERNAME`       | `explorer`                      |
+| `EXPLORER_NEURAI_PASSWORD`       | `EXPLORER_RPC_KEY` from `.env`  |
 | `EXPLORER_HTTP_PORT`             | `8888`                          |
 | `EXPLORER_HEADLINE`              | `Neurai Testnet`                |
 | `EXPLORER_THEME`                 | `light`                         |
@@ -267,26 +270,34 @@ edit the images.
 `NEURAI_RPC_PASSWORD`, `NEURAI_RPC_PORT`, index flags (`NEURAI_TXINDEX`,
 `NEURAI_ASSETINDEX`, `NEURAI_ADDRESSINDEX`, …), and `NEURAI_DATADIR`.
 
-**RPC proxy** (`rpc-proxy` service): `PROXY_CONCURRENCY`, `PROXY_LOCAL_PORT`,
-`NEURAI_EXPECTED_GENESIS` (required: the proxy only routes to a node whose
-block 0 has this hash), `NEURAI_NODE_URL`, `NEURAI_RPC_USER`,
-`NEURAI_RPC_PASSWORD`, and `PROXY_EXTRA_METHODS`: read-only methods to add to
-the proxy's whitelist, comma separated (default `gettxoutsetinfo`, for the
-supply on the home page). `docker/rpc-proxy/extra-whitelist.js` adds them
-before the proxy starts and refuses any name outside its short list of slow
-read-only methods, so a typo can never expose `stop` or a wallet call. With one
-node behind it the proxy caches these answers per block, so the node runs the
-UTXO scan at most once per block however many callers there are.
+**RPC API** (`wallet-services` service): neurai-wallet-services runs with only
+its HTTP API (`PROXY_WSS_ENABLED=false`): no WebSocket push, auth token or ZMQ.
+`NEURAI_NETWORK` and `NEURAI_EXPECTED_GENESIS` pin the chain (a node whose
+block 0 has another hash is never used); `NEURAI_NODE_URL`, `NEURAI_RPC_USER`
+and `NEURAI_RPC_PASSWORD` reach the node. `PROXY_HTTP_CLIENTS` makes the
+explorer a trusted client, recognised by `EXPLORER_RPC_KEY`, which the explorer
+sends as its RPC password: it is not held to the per-IP request limit and may
+call `gettxoutsetinfo` (the coins in circulation on the home page), which the
+public whitelist leaves out because it scans the whole UTXO set. The answer is
+cached per block, so the node runs that scan at most once per block. Every
+other variable is described in the neurai-wallet-services README.
 
 **Shared values** (`docker/.env`, see `docker/.env.example`): `NODE_RPC_USER`
-and `NODE_RPC_PASSWORD` (used by both the node and the proxy),
-`NODE_SOURCE_COMMIT` and `PROXY_SOURCE_COMMIT` (pinned sources).
+and `NODE_RPC_PASSWORD` (used by both the node and wallet-services),
+`EXPLORER_RPC_KEY`, and `NODE_SOURCE_COMMIT` and
+`WALLET_SERVICES_SOURCE_COMMIT` (pinned sources).
 
-To switch to **Mainnet**, set `NEURAI_TESTNET=0` on `neuraid`, point
-`EXPLORER_NEURAI_URL` to the mainnet RPC, adjust ports (`19001/19000` for
-mainnet), set `NEURAI_EXPECTED_GENESIS` to the mainnet genesis
-`00000044d33c0c0ba019be5c0249730424a69cb4c222153322f68c6104484806` and update
-`EXPLORER_HEADLINE`. The network label in the header comes from the node.
+**Updating from the rpc-proxy stack**: the `rpc-proxy` service is gone, and its
+container still holds port 19999 until removed. Add `EXPLORER_RPC_KEY`, update
+`NODE_SOURCE_COMMIT` in your `.env` (a value there overrides the new default;
+`PROXY_SOURCE_COMMIT` is no longer used) and run
+`docker compose up -d --build --remove-orphans` once.
+
+To switch to **Mainnet**, set `NEURAI_TESTNET=0` on `neuraid`, adjust ports
+(`19001/19000` for mainnet, also in `NEURAI_NODE_URL`), set `NEURAI_NETWORK` to
+`mainnet` and `NEURAI_EXPECTED_GENESIS` to the mainnet genesis
+`00000044d33c0c0ba019be5c0249730424a69cb4c222153322f68c6104484806` on
+`wallet-services`, and update `EXPLORER_HEADLINE`. The network label in the header comes from the node.
 
 ### Common operations
 

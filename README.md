@@ -298,6 +298,9 @@ To switch to **Mainnet**, set `NEURAI_TESTNET=0` on `neuraid`, adjust ports
 `mainnet` and `NEURAI_EXPECTED_GENESIS` to the mainnet genesis
 `00000044d33c0c0ba019be5c0249730424a69cb4c222153322f68c6104484806` on
 `wallet-services`, and update `EXPLORER_HEADLINE`. The network label in the header comes from the node.
+If `NEURAI_NODE_URL` points at a mainnet node still on v1.0.6 instead of the
+one built here, remove `PROXY_FLUSHING_READS_PER_SECOND` so wallet-services
+applies its default limit on the reads that make that node flush its state.
 
 ### Common operations
 

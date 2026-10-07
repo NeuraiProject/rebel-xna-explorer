@@ -6,7 +6,7 @@ services:
       args:
         BRANCH: DePIN-Test
         # Pinned so rebuilds are reproducible; it must match NEURAI_EXPECTED_GENESIS below.
-        SOURCE_COMMIT: "${NODE_SOURCE_COMMIT:-a9f7ca593a8d5121d6bb07bbb55670ae5a6a09e3}"
+        SOURCE_COMMIT: "${NODE_SOURCE_COMMIT:-1e325225c65a1de4905147062fed1dd25d9d61c6}"
     container_name: neurai-testnet-node
     restart: unless-stopped
 
@@ -75,7 +75,7 @@ services:
       # The HTTP API of NeuraiProject/neurai-wallet-services, built straight
       # from GitHub with its own Dockerfile at a pinned commit; bump it to
       # update (a branch would stay cached).
-      context: "https://github.com/NeuraiProject/neurai-wallet-services.git#${WALLET_SERVICES_SOURCE_COMMIT:-0c06987e3a07653a62c5f76ae941e2e6e0291199}"
+      context: "https://github.com/NeuraiProject/neurai-wallet-services.git#${WALLET_SERVICES_SOURCE_COMMIT:-d2e5ecbd73e7d8387fd42e306147e09c5295fdea}"
       dockerfile: docker/wallet-services/Dockerfile
     container_name: neurai-testnet-wallet-services
     restart: unless-stopped
@@ -110,6 +110,10 @@ services:
       # set and is left out of the public whitelist. Answered at most once per
       # block (cached), however many pages ask.
       PROXY_HTTP_CLIENTS: '[{"name":"explorer","key":"${EXPLORER_RPC_KEY:-change-this-explorer-key}","extra_methods":["gettxoutsetinfo"]}]'
+      # Off: the limit on reads that flush the node's state is for mainnet
+      # nodes still on v1.0.6. The node built here (DePIN-Test) flushes those
+      # reads at most once per chain state.
+      PROXY_FLUSHING_READS_PER_SECOND: "0"
 
     expose:
       - "19999"

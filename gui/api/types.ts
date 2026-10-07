@@ -272,10 +272,15 @@ export interface AssetDetail {
   owner: { address: string; amount: Decimal } | null;
   holderCount: number | null;
   parent: string | null;
-  subAssets: string[];
-  uniques: string[];
+  /** null: could not be read (listed in `unavailable`) */
+  subAssets: string[] | null;
+  uniques: string[] | null;
+  /** Parts the server could not read this time, e.g. the RPC service was busy */
+  unavailable: AssetDetailPart[];
   raw: unknown;
 }
+
+export type AssetDetailPart = "owner" | "holders" | "issueTx" | "subAssets" | "uniques";
 
 export interface AssetHolders extends Paged<{ rank: number; address: string; amount: Decimal; share: number | null }> {
   supply: Decimal;

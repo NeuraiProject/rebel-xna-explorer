@@ -961,18 +961,35 @@ export async function getAssetDetail(name) {
   const type = assetType(assetName);
   const listing = (await getAllAssets()).find((asset) => asset.name === assetName) || null;
 
+  /*
+    Parts that could not be read: the RPC service may refuse a burst of these
+    asset reads (wallet-services answers 503 to protect a v1.0.6 node), or the
+    node may be unreachable. The page names them and offers a retry, instead
+    of showing an empty list as if there were none.
+  */
+  const unavailable = [];
+  const missing = (part) => () => {
+    unavailable.push(part);
+    return null;
+  };
+
   let owner = null;
   if (type !== "owner" && type !== "unique" && type !== "qualifier") {
     try {
       const owners = await getHolders(assetName + "!");
       if (owners.length) owner = { address: owners[0].address, amount: decimal(owners[0].amount) };
-    } catch (e) {}
+    } catch (e) {
+      //Only "not a valid asset name" means there is no owner token (e.g.
+      //"$TOKEN!"); anything else, an RPC failure or a node without
+      //-assetindex, means the owner could not be read
+      if (!blockchain.isInvalidAssetName(e)) unavailable.push("owner");
+    }
   }
   const [holders, issueTxid, subAssets, uniques] = await Promise.all([
-    getHolders(assetName).catch(() => null),
-    findIssueTx(assetName, listing && listing.blockhash).catch(() => null),
-    blockchain.listAssetNames(assetName + "/*").catch(() => []),
-    blockchain.listAssetNames(assetName + "#*").catch(() => []),
+    getHolders(assetName).catch(missing("holders")),
+    findIssueTx(assetName, listing && listing.blockhash).catch(missing("issueTx")),
+    blockchain.listAssetNames(assetName + "/*").catch(missing("subAssets")),
+    blockchain.listAssetNames(assetName + "#*").catch(missing("uniques")),
   ]);
 
   return {
@@ -990,8 +1007,10 @@ export async function getAssetDetail(name) {
     owner,
     holderCount: holders ? holders.length : null,
     parent: parentAsset(assetName),
-    subAssets: (subAssets || []).slice(0, 200),
-    uniques: (uniques || []).slice(0, 200),
+    //null: could not be read (listed in `unavailable`)
+    subAssets: subAssets === null ? null : (Array.isArray(subAssets) ? subAssets : []).slice(0, 200),
+    uniques: uniques === null ? null : (Array.isArray(uniques) ? uniques : []).slice(0, 200),
+    unavailable,
     raw: meta,
   };
 }

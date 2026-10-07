@@ -217,11 +217,18 @@ export function listAssetNames(pattern) {
 }
 export async function getAddressesByAsset(name) {
   const addresses = await rpc(methods.listaddressesbyasset, [name]);
-  //The node answers invalid asset names (e.g. "#QUALIFIER!") with a string
+  //The node answers some calls with a string instead of an error: invalid
+  //asset names (e.g. "#QUALIFIER!") and a node without -assetindex
   if (typeof addresses === "string") {
     throw new Error(addresses);
   }
   return addresses;
+}
+//The node's answer for a name that cannot exist, such as the owner token of a
+//restricted asset ("$TOKEN!"). Any other error is a failed read.
+const INVALID_ASSET_NAME = "_Not a valid asset name";
+export function isInvalidAssetName(e) {
+  return e instanceof Error && e.message === INVALID_ASSET_NAME;
 }
 export async function getAddressDeltas(address) {
   return Reader.getAddressDeltas(address);
@@ -257,6 +264,7 @@ export default {
   getTransaction,
   getTxOutSetInfo,
   getType,
+  isInvalidAssetName,
   listAssetNames,
   listAssetsVerbose,
   validateAddress,

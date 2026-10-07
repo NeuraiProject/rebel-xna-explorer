@@ -33,6 +33,6 @@ export default defineConfig({
   },
   test: {
     root: ".",
-    include: ["shared/**/*.test.js", "gui/**/*.test.ts"],
+    include: ["*.test.js", "shared/**/*.test.js", "gui/**/*.test.ts"],
   },
 });

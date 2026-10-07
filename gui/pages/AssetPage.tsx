@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { AssetDetail, AssetHolders } from "../api/types";
+import type { AssetDetail, AssetDetailPart, AssetHolders } from "../api/types";
 import { useApi } from "../hooks/useApi";
 import { useSettings } from "../hooks/useSettings";
 import { formatNumber, formatShare, middleEllipsis } from "../lib/format";
@@ -83,8 +83,9 @@ function Holders({ asset }: { asset: AssetDetail }) {
   );
 }
 
-function Related({ title, names }: { title: string; names: string[] }) {
-  if (names.length === 0) return null;
+function Related({ title, names }: { title: string; names: string[] | null }) {
+  //null: not read this time, and the Unavailable card says so
+  if (!names || names.length === 0) return null;
   return (
     <Card title={<>{title} <span className="ml-1 font-normal text-subtle tabular-nums">{names.length}</span></>}>
       <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
@@ -94,6 +95,29 @@ function Related({ title, names }: { title: string; names: string[] }) {
           </li>
         ))}
       </ul>
+    </Card>
+  );
+}
+
+const PART_LABELS: Record<AssetDetailPart, string> = {
+  owner: "owner",
+  holders: "holder count",
+  issueTx: "issuance transaction",
+  subAssets: "sub-assets",
+  uniques: "unique tokens",
+};
+
+//Parts the server could not read (a busy RPC service, an unreachable node):
+//said out loud, so a missing list is not taken for an empty one
+function Unavailable({ parts, onRetry }: { parts: AssetDetailPart[]; onRetry: () => void }) {
+  if (parts.length === 0) return null;
+  return (
+    <Card>
+      <ErrorState
+        title="Part of this asset could not be loaded"
+        error={"Missing: " + parts.map((part) => PART_LABELS[part]).join(", ") + ". The data service may be busy; try again in a moment."}
+        onRetry={onRetry}
+      />
     </Card>
   );
 }
@@ -196,6 +220,7 @@ export function AssetPage({ name }: { name: string }) {
         <DetailGrid items={facts} />
       </section>
 
+      <Unavailable parts={data.unavailable} onRetry={asset.reload} />
       <Holders asset={data} />
       <Related title="Sub-assets" names={data.subAssets} />
       <Related title="Unique tokens" names={data.uniques} />

@@ -72,11 +72,11 @@ services:
 
   wallet-services:
     build:
-      # The HTTP API of NeuraiProject/neurai-wallet-services, built straight
-      # from GitHub with its own Dockerfile at a pinned commit; bump it to
-      # update (a branch would stay cached).
-      context: "https://github.com/NeuraiProject/neurai-wallet-services.git#${WALLET_SERVICES_SOURCE_COMMIT:-d2e5ecbd73e7d8387fd42e306147e09c5295fdea}"
-      dockerfile: docker/wallet-services/Dockerfile
+      # Keep the Compose context local; the Dockerfile fetches the pinned sources.
+      context: ./wallet-services
+      dockerfile: Dockerfile
+      args:
+        SOURCE_COMMIT: "${WALLET_SERVICES_SOURCE_COMMIT:-d2e5ecbd73e7d8387fd42e306147e09c5295fdea}"
     container_name: neurai-testnet-wallet-services
     restart: unless-stopped
 

@@ -207,12 +207,21 @@ What each image is built from:
 - `neuraid`: branch `DePIN-Test` of NeuraiProject/Neurai at the pinned
   `NODE_SOURCE_COMMIT`.
 - `wallet-services`: NeuraiProject/neurai-wallet-services at the pinned
-  `WALLET_SERVICES_SOURCE_COMMIT`, built from GitHub with its own Dockerfile.
+  `WALLET_SERVICES_SOURCE_COMMIT`. Its local Dockerfile fetches and verifies
+  that full, 40-character lowercase commit during the build. Git is kept out
+  of the runtime image; dependency installation and the entrypoint follow
+  the upstream Dockerfile. When changing the commit, check whether that
+  upstream Dockerfile also needs a runtime or dependency update here.
 
 The node and wallet-services are pinned on purpose: Docker caches the layer that
 fetches the sources, so following a branch would keep whatever commit the
 first build saw. To update them, change the commit in `docker/.env` and run
 `docker compose up -d --build`.
+
+All Compose build contexts are local folders. This also works with KudeCP's
+Compose validation: select `docker/docker-compose.yml` and enter the values
+from `docker/.env.example` in the app's variables. The source commit is a
+build argument, rather than a variable in a remote context URL.
 
 ### Requirements
 - Docker and Docker Compose v2 (`docker compose`).

@@ -18,6 +18,7 @@ tmp
 # Other services' build folders and the compose files aren't part of the
 # explorer image; only the explorer entrypoint is copied in.
 docker/node
+docker/wallet-services
 docker/docker-compose.yml
 docker/.env*
 docker/explorer-rpc/Dockerfile

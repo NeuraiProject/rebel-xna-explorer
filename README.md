@@ -244,12 +244,16 @@ The first build takes a while because `neuraid` is compiled from source
 Once the `neuraid` healthcheck passes, wallet-services and the explorer will
 start automatically.
 
-- Explorer UI: http://localhost:8888 (published on all interfaces)
+- Explorer UI: http://127.0.0.1:8888 (host loopback only: Docker bypasses
+  host firewalls such as ufw, so serve it through a reverse proxy on the host,
+  e.g. Nginx, or publish it as `"8888:8888"` on purpose)
 - RPC API:     http://127.0.0.1:19999/rpc (host loopback only; it only
   forwards whitelisted methods). The explorer reaches it over the Docker
   network. To offer it as a public RPC, publish it as `"19999:19999"`: other
   clients get the per-IP limits and the public whitelist.
-- Node P2P:    port `19100` (testnet)
+- Node P2P:    port `19100` (testnet), not published: the node accepts no
+  inbound peers (`NEURAI_LISTEN=0`). Set `NEURAI_LISTEN=1` and uncomment the
+  port to accept them.
 - Node RPC:    http://127.0.0.1:19101 (host loopback only; wallet-services
   reaches the node over the Docker network). Do not publish it on `0.0.0.0`: Docker
   bypasses host firewalls such as ufw, and this is the node's full RPC.

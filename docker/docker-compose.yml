@@ -55,7 +55,9 @@ services:
       - neurai_data_20261105:/data
 
     ports:
-      - "19100:19100"   # testnet P2P
+      # Testnet P2P. Not published: the node runs with NEURAI_LISTEN=0, so it
+      # accepts no inbound peers. Uncomment it together with NEURAI_LISTEN=1.
+      # - "19100:19100"
       # Loopback only: Docker bypasses host firewalls such as ufw, so
       # publishing it on 0.0.0.0 would open the full node RPC to the internet.
       - "127.0.0.1:19101:19101"   # testnet RPC
@@ -161,7 +163,11 @@ services:
       - "8888"
 
     ports:
-      - "8888:8888"
+      # Loopback only: Docker bypasses host firewalls such as ufw, so
+      # "8888:8888" would publish the explorer on every interface. Serve it
+      # through a reverse proxy on the host (e.g. Nginx), or publish it as
+      # "8888:8888" on purpose.
+      - "127.0.0.1:8888:8888"
 
     networks:
       - neurai_net

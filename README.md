@@ -226,7 +226,7 @@ build argument, rather than a variable in a remote context URL.
 ### Requirements
 - Docker and Docker Compose v2 (`docker compose`).
 - Enough disk space for the Neurai data directory (stored in the
-  `neurai_data` named volume).
+  `neurai_data_20261105` named volume).
 
 ### Start
 
@@ -296,6 +296,23 @@ and `NODE_RPC_PASSWORD` (used by both the node and wallet-services),
 `EXPLORER_RPC_KEY`, and `NODE_SOURCE_COMMIT` and
 `WALLET_SERVICES_SOURCE_COMMIT` (pinned sources).
 
+The node's build stage extracts dependency archives with
+`TAR_OPTIONS=--no-same-owner`. Source files keep the builder's ownership instead
+of the archive author's UID/GID, which may be outside rootless Docker's user
+mapping (for example, protobuf 2.6.1 uses UID 109965). This also applies to the
+Berkeley DB installer; the final runtime image does not inherit this setting.
+
+**Updating to the testnet of 2026-11-05**: the testnet restarted from a new
+genesis (`000000c710413a4265a996d30c86043aedef6a563900f1bc43fea61d5b2dc77d`) and
+requires protocol 70031, so nodes built from earlier commits are refused by its
+peers. The node also refuses to start on the previous chain's data, so the chain
+now lives in a new volume, `neurai_data_20261105`, and syncs from scratch. If
+your `.env` sets `NODE_SOURCE_COMMIT` or `WALLET_SERVICES_SOURCE_COMMIT`, update
+them to the values in `.env.example` (wallet-services must pin the new genesis
+too), then run `docker compose up -d --build`. Once the node is synced, the old
+volume can be removed with `docker volume rm docker_neurai_data` (Compose names
+it after the folder, `docker`, unless you set a project name).
+
 **Updating from the rpc-proxy stack**: the `rpc-proxy` service is gone, and its
 container still holds port 19999 until removed. Add `EXPLORER_RPC_KEY`, update
 `NODE_SOURCE_COMMIT` in your `.env` (a value there overrides the new default;
@@ -329,7 +346,7 @@ docker compose down -v
 
 ### Data persistence
 
-The chain data lives in the `neurai_data` named volume, so restarts and
+The chain data lives in the `neurai_data_20261105` named volume, so restarts and
 `docker compose down` preserve it. Use `docker compose down -v` only if you
 want to wipe it and re-sync from scratch.
 

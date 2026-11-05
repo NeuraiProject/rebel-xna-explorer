@@ -53,6 +53,9 @@ RUN git clone --branch ${BRANCH} --single-branch \
 
 WORKDIR /root/Neurai/depends
 
+# Keep extracted sources owned by the builder, including install_db4.sh's tar.
+ENV TAR_OPTIONS=--no-same-owner
+
 RUN make HOST=x86_64-pc-linux-gnu -j$(nproc)
 
 WORKDIR /root/Neurai

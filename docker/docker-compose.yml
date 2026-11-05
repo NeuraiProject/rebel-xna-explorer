@@ -6,7 +6,7 @@ services:
       args:
         BRANCH: DePIN-Test
         # Pinned so rebuilds are reproducible; it must match NEURAI_EXPECTED_GENESIS below.
-        SOURCE_COMMIT: "${NODE_SOURCE_COMMIT:-1e325225c65a1de4905147062fed1dd25d9d61c6}"
+        SOURCE_COMMIT: "${NODE_SOURCE_COMMIT:-7f1773e538c210212441bd723eb8ea3ba99a00ef}"
     container_name: neurai-testnet-node
     restart: unless-stopped
 
@@ -52,7 +52,7 @@ services:
       NEURAI_DATADIR: "/data"
 
     volumes:
-      - neurai_data:/data
+      - neurai_data_20261105:/data
 
     ports:
       - "19100:19100"   # testnet P2P
@@ -76,7 +76,7 @@ services:
       context: ./wallet-services
       dockerfile: Dockerfile
       args:
-        SOURCE_COMMIT: "${WALLET_SERVICES_SOURCE_COMMIT:-d2e5ecbd73e7d8387fd42e306147e09c5295fdea}"
+        SOURCE_COMMIT: "${WALLET_SERVICES_SOURCE_COMMIT:-892278f4e3cde2c1397abceea3fbbfac1eec5935}"
     container_name: neurai-testnet-wallet-services
     restart: unless-stopped
 
@@ -99,7 +99,7 @@ services:
       # Testnet genesis of the DePIN-Test branch: a node on another chain is
       # never used.
       NEURAI_NETWORK: "testnet"
-      NEURAI_EXPECTED_GENESIS: "0000008b384aeffecdab182575dc4e86c9f07f90318c65088532660ed9a8a021"
+      NEURAI_EXPECTED_GENESIS: "000000c710413a4265a996d30c86043aedef6a563900f1bc43fea61d5b2dc77d"
       NEURAI_NODE_NAME: "neuraid-testnet"
       NEURAI_NODE_URL: "http://neuraid:19101"
       NEURAI_RPC_USER: "${NODE_RPC_USER:-neurai}"
@@ -170,7 +170,10 @@ services:
       - wallet-services
 
 volumes:
-  neurai_data:
+  # Testnet restarted from a new genesis on 2026-11-05 and the node refuses to
+  # start on the previous chain's data, so the chain lives in a new volume. The
+  # old `neurai_data` volume is no longer used.
+  neurai_data_20261105:
     driver: local
 
 networks:

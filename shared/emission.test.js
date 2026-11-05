@@ -23,6 +23,21 @@ describe("blockSubsidy", () => {
     expect(blockSubsidy(10, test)).toBe(xna(25000));
     expect(blockSubsidy(10 + 28800, test)).toBe(xna(23750));
   });
+
+  //From GetBlockSubsidy in the node (DePIN-Test 7f1773e); testnet reaches these floors years from now
+  it("halves the 5,000 and 4,000 XNA floors after the fork and lowers the later ones a step", () => {
+    const test = EMISSION.test;
+    const at = (halvings) => 10 + halvings * 28800;
+    expect(blockSubsidy(at(36), test)).toBe(xna(2500));
+    expect(blockSubsidy(at(72), test)).toBe(xna(2000));
+    expect(blockSubsidy(at(108) - 1, test)).toBe(xna(2000));
+    expect(blockSubsidy(at(108), test)).toBe(xna(1000));
+    expect(blockSubsidy(at(144), test)).toBe(xna(500));
+    expect(blockSubsidy(at(180), test)).toBe(xna(250));
+    expect(blockSubsidy(at(216), test)).toBe(xna(125));
+    expect(blockSubsidy(at(383) - 1, test)).toBe(xna(125));
+    expect(blockSubsidy(at(383), test)).toBe(0n);
+  });
 });
 
 describe("totalMined", () => {
@@ -35,5 +50,6 @@ describe("totalMined", () => {
 
   it("knows the most there will ever be", () => {
     expect(maxSupply(EMISSION.main)).toBe(totalMined(383 * 14400 - 1, EMISSION.main));
+    expect(maxSupply(EMISSION.test)).toBe(totalMined(10 + 383 * 28800 - 1, EMISSION.test));
   });
 });

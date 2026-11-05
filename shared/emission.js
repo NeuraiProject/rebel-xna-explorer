@@ -11,7 +11,11 @@
   4,000 from 72, 3,000 from 108, 2,000 from 144, 1,000 from 180, 500 from 216,
   and nothing from 383. From NIP-028's activation height (testnet: block 10)
   micro-halvings come every 28,800 blocks and the reward is halved, so ~30 s
-  blocks pay out at the same rate as the old 60 s ones.
+  blocks pay out at the same rate as the old 60 s ones. From the 3,000 XNA
+  floor on, the fork lowers each floor further instead of halving it:
+  3,000 -> 1,000, 2,000 -> 500, 1,000 -> 250 and 500 -> 125 XNA per block.
+  Mainnet has no activation height yet; set `reductionHeight` when the fork is
+  scheduled.
 */
 
 /** @typedef {{interval: number, reductionHeight: number, intervalPost: number}} EmissionParams */
@@ -25,14 +29,14 @@ export const EMISSION = {
 
 const COIN = 100000000;
 
-//[micro-halvings, floor in XNA], highest first
+//[micro-halvings, floor in XNA, floor after NIP-028's activation in XNA], highest first
 const FLOORS = [
-  [216, 500],
-  [180, 1000],
-  [144, 2000],
-  [108, 3000],
-  [72, 4000],
-  [36, 5000],
+  [216, 500, 125],
+  [180, 1000, 250],
+  [144, 2000, 500],
+  [108, 3000, 1000],
+  [72, 4000, 2000],
+  [36, 5000, 2500],
 ];
 
 /**
@@ -57,8 +61,8 @@ export function blockSubsidy(height, params) {
   const { post, halvings } = halvingsAt(height, params);
   const half = (/** @type {bigint} */ value) => (post ? value >> 1n : value);
   if (halvings >= 383) return 0n;
-  for (const [from, xna] of FLOORS) {
-    if (halvings >= from) return half(BigInt(xna) * BigInt(COIN));
+  for (const [from, xna, xnaPost] of FLOORS) {
+    if (halvings >= from) return BigInt(post ? xnaPost : xna) * BigInt(COIN);
   }
   //The node multiplies an integer by a double and truncates: do the same
   return half(BigInt(Math.trunc(50000 * COIN * Math.pow(0.95, halvings))));

@@ -56,7 +56,10 @@ WORKDIR /root/Neurai/depends
 # Keep extracted sources owned by the builder, including install_db4.sh's tar.
 ENV TAR_OPTIONS=--no-same-owner
 
-RUN make HOST=x86_64-pc-linux-gnu -j$(nproc)
+# NO_QT=1: the image ships neuraid and neurai-cli only (configure runs
+# --without-gui), so skip Qt and its packages (qrencode, protobuf, X11...).
+# That saves a long build and qrencode's download from snapshot.debian.org.
+RUN make HOST=x86_64-pc-linux-gnu NO_QT=1 -j$(nproc)
 
 WORKDIR /root/Neurai
 

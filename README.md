@@ -12,7 +12,8 @@ wallet. It works on phones and desktops, in light and dark mode.
   mined blocks in orange, each with its fee rate, size and transactions, and a
   liquid that rises with one bubble per transaction. A rainbow edge marks a
   block where an asset was created, a purple one a block where coins entered
-  or left a privacy pool. New blocks slide in without reloading. Below it, network stats
+  or left a privacy pool. New blocks slide in without reloading. On a phone
+  the five latest mined blocks sit side by side and you swipe through them. Below it, network stats
   (coins mined so far, block time, hashrate, difficulty, throughput and, on
   mainnet, the XNA price) and the latest blocks and transactions.
 - **Blocks**: every block, page by page, and each block with its reward,

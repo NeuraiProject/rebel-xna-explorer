@@ -125,7 +125,8 @@ export function Header({ route }: { route: Route }) {
         <span
           title={status}
           className={cx(
-            "absolute top-0 right-[104px] z-10 inline-flex select-none items-center gap-1.5 rounded-b-md border border-t-0 px-2.5 py-1 text-[10.5px] leading-none font-bold tracking-[0.08em] uppercase lg:right-24",
+            //Centred over the menu handle on phones, left of the buttons on wide screens
+            "absolute top-0 left-1/2 z-10 inline-flex -translate-x-1/2 select-none items-center gap-1.5 whitespace-nowrap rounded-b-md border border-t-0 px-2.5 py-1 text-[10.5px] leading-none font-bold tracking-[0.08em] uppercase lg:right-24 lg:left-auto lg:translate-x-0",
             tone === "ok" && "border-ok-line bg-ok-soft text-ok",
             tone === "bad" && "border-bad/40 bg-bad-soft text-bad",
             tone === "neutral" && "border-base-300 bg-sunken text-muted"

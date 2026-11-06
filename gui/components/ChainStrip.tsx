@@ -18,11 +18,28 @@ import { RelativeTime, cx } from "./ui";
 //Cube width and the least space between blocks, below and from the sm breakpoint.
 //Keep in step with --cube in .nx-glass (explorer.css).
 const SIZES = { narrow: { cube: 88, gap: 10 }, wide: { cube: 136, gap: 24 } };
+const WIDE = "(min-width: 640px)";
+
+//On a phone only two cubes fit beside the next block, so there the latest
+//mined blocks sit in a row the finger slides, this many of them
+const SWIPE_COUNT = 5;
+
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = React.useState(() => typeof window !== "undefined" && window.matchMedia(query).matches);
+  React.useEffect(() => {
+    const media = window.matchMedia(query);
+    const onChange = () => setMatches(media.matches);
+    onChange();
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  }, [query]);
+  return matches;
+}
 
 /** How many cubes fit side by side in an element, so none is cut and nothing scrolls */
 function useFittingCount(ref: React.RefObject<HTMLDivElement | null>): number {
   const fit = (width: number) => {
-    const { cube, gap } = window.matchMedia("(min-width: 640px)").matches ? SIZES.wide : SIZES.narrow;
+    const { cube, gap } = window.matchMedia(WIDE).matches ? SIZES.wide : SIZES.narrow;
     return Math.max(1, Math.floor((width + gap) / (cube + gap)));
   };
   const [count, setCount] = React.useState(() => (typeof window === "undefined" ? 1 : fit(window.innerWidth / 2)));
@@ -47,18 +64,6 @@ type Group = "coinbase" | "privacy" | "asset" | "payment" | "other" | "pending";
 const FRONT = "0.75,12.75 123.25,12.75 123.25,135.25 0.75,135.25";
 const TOP = "0.75,12.75 12.75,0.75 135.25,0.75 123.25,12.75";
 const SIDE = "123.25,12.75 135.25,0.75 135.25,123.25 123.25,135.25";
-
-function usePrefersReducedMotion(): boolean {
-  const query = "(prefers-reduced-motion: reduce)";
-  const [reduced, setReduced] = React.useState(() => typeof window !== "undefined" && window.matchMedia(query).matches);
-  React.useEffect(() => {
-    const media = window.matchMedia(query);
-    const onChange = () => setReduced(media.matches);
-    media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
-  }, []);
-  return reduced;
-}
 
 function rateText(spread: FeeRateSpread | null): string | null {
   if (!spread) return null;
@@ -120,7 +125,7 @@ interface GlassCubeProps {
 }
 
 function GlassCube({ pending = false, rainbow = false, privacy = false, lines, size, count, mix, seed }: GlassCubeProps) {
-  const reduced = usePrefersReducedMotion();
+  const reduced = useMediaQuery("(prefers-reduced-motion: reduce)");
   const uid = React.useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const list = React.useMemo(() => bubbles(mix, count, seed), [mix, count, seed]);
   const rows = Math.max(1, Math.ceil(list.length / PER_ROW));
@@ -295,10 +300,12 @@ export function ChainStrip({ data }: { data: ChainStripData }) {
     answer.current = data;
   }
 
-  //Only the blocks that fit, spread over the width: no scrollbar, no cut cube
+  //Wide screens: only the blocks that fit, spread over the width, no scrollbar,
+  //no cut cube. Phones: a few blocks side by side that slide under the finger.
+  const wide = useMediaQuery(WIDE);
   const minedRow = React.useRef<HTMLDivElement>(null);
   const fitting = useFittingCount(minedRow);
-  const shown = data.blocks.slice(0, fitting);
+  const shown = data.blocks.slice(0, wide ? fitting : SWIPE_COUNT);
 
   return (
     <div className="flex min-w-0 flex-col gap-3">
@@ -310,8 +317,13 @@ export function ChainStrip({ data }: { data: ChainStripData }) {
         <div
           ref={minedRow}
           className={cx(
-            "flex min-w-0 flex-1 items-end gap-2.5 overflow-x-clip sm:gap-6",
-            shown.length < data.blocks.length ? "justify-between" : "justify-start"
+            "flex min-w-0 flex-1 items-end",
+            wide
+              ? cx("gap-6 overflow-x-clip", shown.length < data.blocks.length ? "justify-between" : "justify-start")
+              : //The row reaches back to the dashed line, where the blocks fade out, and
+                //forward to the card's edge (its px-4 in HomePage.tsx), where the next one
+                //peeks out; down into the padding below, so the glow is not cut
+                "nx-swipe -mr-4 -mb-4 -ml-2.5 snap-x snap-mandatory scroll-pl-2.5 gap-2.5 overflow-x-auto overflow-y-hidden overscroll-x-contain pr-4 pb-4 pl-2.5"
           )}
         >
           {shown.map((block) => (

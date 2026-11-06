@@ -393,6 +393,17 @@ a:focus-visible > .nx-glass {
   50% { opacity: 0.6; }
 }
 
+/* Phones: the mined blocks slide sideways and fade out under the dashed line */
+.nx-swipe {
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 10px);
+  mask-image: linear-gradient(to right, transparent, #000 10px);
+}
+
+.nx-swipe::-webkit-scrollbar {
+  display: none;
+}
+
 /* A block that just arrived slides in from the mempool side */
 @keyframes nx-cube-in {
   from { opacity: 0; transform: translateX(-28px) scale(0.94); }

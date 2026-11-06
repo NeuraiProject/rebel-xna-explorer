@@ -307,6 +307,15 @@ export function ChainStrip({ data }: { data: ChainStripData }) {
   const fitting = useFittingCount(minedRow);
   const shown = data.blocks.slice(0, wide ? fitting : SWIPE_COUNT);
 
+  //A new block goes in at the start of the row. Scroll snapping would keep the
+  //block in view where it was and hide the new one to the left, so the row goes
+  //back to the start, before it is painted: all the blocks shift along
+  const newest = data.blocks[0]?.hash;
+  React.useLayoutEffect(() => {
+    const row = minedRow.current;
+    if (row && !wide) row.scrollLeft = 0;
+  }, [newest, wide]);
+
   return (
     <div className="flex min-w-0 flex-col gap-3">
       <div className="flex items-end gap-2.5 pt-2 pb-4 sm:gap-6" role="group" aria-label="The next block and the latest mined ones">
